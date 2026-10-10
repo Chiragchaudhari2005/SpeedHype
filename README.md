@@ -17,6 +17,8 @@ SpeedHype is a modern automotive community platform designed for car and bike en
 - **Tailwind CSS 4** - Utility-first CSS framework
 - **Axios** - HTTP client for API requests
 - **Clerk React SDK** - Authentication and user management
+- **Socket.IO Client** - Authenticated live community chat
+- **Notifications** - Activity updates for blogs, communities, and vehicle launches
 
 ### Backend
 - **Node.js** - JavaScript runtime
@@ -24,6 +26,9 @@ SpeedHype is a modern automotive community platform designed for car and bike en
 - **MongoDB** - NoSQL database
 - **Mongoose** - MongoDB object modeling
 - **Clerk Node SDK** - Backend authentication verification
+- **Socket.IO** - Real-time community chat transport
+- **Cloudinary** - Community covers and chat image/video uploads
+- **Activity feed** - Recent blogs, communities, vehicle launches, trending tags, and community suggestions
 
 ### Authentication
 - **Clerk** - Complete authentication solution
@@ -94,7 +99,13 @@ PORT=5000
 MONGO_URI=your_mongodb_connection_string
 CLERK_SECRET_KEY=your_clerk_secret_key
 CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+CLIENT_ORIGIN=http://localhost:5173
 ```
+
+Cloudinary is used for optional community covers and chat image/video attachments. Keep its API secret in the server environment only. Chat attachments are limited to 12 MB.
 
 ### 3. Clerk Setup
 1. Create a Clerk application at [clerk.com](https://clerk.com)
@@ -173,10 +184,15 @@ const postResult = await authenticatedRequest(
 ### Protected Routes (Require Authentication)
 - `/dashboard` - User dashboard with welcome message
 - `/profile` - User profile using Clerk components
-- `/feed` - Automotive content feed (placeholder)
-- `/communities` - Community discussions (placeholder)
-- `/blogs` - Automotive blogs (placeholder)
-- `/cars` - Car database (placeholder)
+- `/feed` - Recent stories, communities, vehicle launches, trending topics, and suggestions
+- `/notifications` - Recent SpeedHype activity and unread updates
+- `/communities` - Search, filter, join, and manage communities
+- `/communities/new` - Create an automotive community
+- `/communities/:communityId` - Community information, members, and real-time chat
+- `/communities/:communityId/edit` - Edit a community as its creator
+- `/blogs` - Automotive blogs
+- `/cars` - Existing vehicle catalog and latest community-added car launches
+- `/cars/new` - Add a vehicle launch to the SpeedHype database and activity feed
 - `/compare` - Vehicle comparison (placeholder)
 
 ### UI Design

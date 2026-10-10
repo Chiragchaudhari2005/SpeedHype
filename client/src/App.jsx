@@ -7,9 +7,15 @@ import SignUpPage from './pages/SignUpPage'
 import DashboardPage from './pages/DashboardPage'
 import ProfilePage from './pages/ProfilePage'
 import FeedPage from './pages/FeedPage'
+import NotificationsPage from './pages/NotificationsPage'
 import CommunitiesPage from './pages/CommunitiesPage'
+import CommunityDetailsPage from './pages/CommunityDetailsPage'
+import CommunityEditorPage from './pages/CommunityEditorPage'
 import BlogsPage from './pages/BlogsPage'
+import BlogDetailsPage from './pages/BlogDetailsPage'
+import BlogEditorPage from './pages/BlogEditorPage'
 import CarsPage from './pages/CarsPage'
+import VehicleEditorPage from './pages/VehicleEditorPage'
 import ComparePage from './pages/ComparePage'
 import NotFoundPage from './pages/NotFoundPage'
 
@@ -51,11 +57,39 @@ function App() {
           </MainLayout>
         </ProtectedRoute>
       } />
+      <Route path="/notifications" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <NotificationsPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
 
       <Route path="/communities" element={
         <ProtectedRoute>
           <MainLayout>
             <CommunitiesPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/communities/new" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <CommunityEditorPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/communities/:communityId/edit" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <CommunityEditorPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/communities/:communityId" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <CommunityDetailsPage />
           </MainLayout>
         </ProtectedRoute>
       } />
@@ -67,11 +101,39 @@ function App() {
           </MainLayout>
         </ProtectedRoute>
       } />
+      <Route path="/blogs/new" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <BlogEditorPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/blogs/:blogId/edit" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <BlogEditorPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/blogs/:blogId" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <BlogDetailsPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
 
       <Route path="/cars" element={
         <ProtectedRoute>
           <MainLayout>
             <CarsPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/cars/new" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <VehicleEditorPage />
           </MainLayout>
         </ProtectedRoute>
       } />

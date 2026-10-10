@@ -1,171 +1,214 @@
+import { useCallback, useEffect, useState } from 'react'
+import { useAuth } from '@clerk/react'
 import { Link } from 'react-router-dom'
+import { authenticatedRequest } from '../services/api'
+
+const timeAgo = (value) => {
+  const elapsed = Math.max(0, Date.now() - new Date(value).getTime())
+  const minutes = Math.floor(elapsed / 60000)
+  if (minutes < 1) return 'Just now'
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  if (days < 30) return `${days}d ago`
+  return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }).format(new Date(value))
+}
+
+const itemMeta = {
+  blog: { label: 'New story', icon: '✎', accent: 'text-red-300' },
+  community: { label: 'New community', icon: '◎', accent: 'text-orange-300' },
+  vehicle: { label: 'New car launch', icon: '↗', accent: 'text-emerald-300' },
+}
+
+function FeedItem({ item }) {
+  const meta = itemMeta[item.type]
+  return (
+    <article className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900">
+      <div className="flex items-center gap-3 p-5">
+        {item.authorImage ? (
+          <img src={item.authorImage} alt="" className="h-10 w-10 rounded-full object-cover" />
+        ) : (
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-800 font-bold text-red-300">{item.authorName?.charAt(0)?.toUpperCase() || 'S'}</span>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-bold text-zinc-100">{item.authorName || 'SpeedHype'}</p>
+          <p className={`text-xs ${meta.accent}`}>{meta.label} <span className="text-zinc-500">· {timeAgo(item.createdAt)}</span></p>
+        </div>
+        <span className="text-xl text-zinc-500" aria-hidden="true">{meta.icon}</span>
+      </div>
+      <Link to={item.href} className="block">
+        {item.image && (
+          <div className="aspect-[16/8] overflow-hidden bg-zinc-950">
+            <img src={item.image} alt="" className="h-full w-full object-cover transition duration-500 hover:scale-[1.02]" />
+          </div>
+        )}
+        <div className="p-5 pt-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-zinc-800 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-zinc-300">{item.category}</span>
+            {item.type === 'community' && <span className="text-xs text-zinc-500">{item.memberCount} members</span>}
+          </div>
+          <h2 className="mt-3 text-xl font-bold leading-snug text-white hover:text-red-300">{item.title}</h2>
+          {item.description && <p className="mt-2 line-clamp-3 whitespace-pre-line text-sm leading-6 text-zinc-400">{item.description}</p>}
+          <span className="mt-4 inline-flex text-sm font-bold text-red-400">Explore <span className="ml-1" aria-hidden="true">↗</span></span>
+        </div>
+      </Link>
+    </article>
+  )
+}
 
 const FeedPage = () => {
+  const { getToken } = useAuth()
+  const [feed, setFeed] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  const loadFeed = useCallback(async (active = () => true) => {
+    try {
+      const response = await authenticatedRequest(getToken, 'GET', '/feed')
+      if (active()) {
+        setFeed(response.data)
+        setError('')
+      }
+    } catch (requestError) {
+      if (active()) setError(requestError.response?.data?.message || 'Your feed could not be loaded.')
+    } finally {
+      if (active()) setLoading(false)
+    }
+  }, [getToken])
+
+  useEffect(() => {
+    let active = true
+    const initialLoad = window.setTimeout(() => loadFeed(() => active), 0)
+    const interval = window.setInterval(() => loadFeed(() => active), 60000)
+    return () => {
+      active = false
+      window.clearTimeout(initialLoad)
+      window.clearInterval(interval)
+    }
+  }, [loadFeed, refreshKey])
+
+  const refreshFeed = () => {
+    setLoading(true)
+    setRefreshKey((value) => value + 1)
+  }
+
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Your Feed</h1>
-        <p className="text-zinc-400">Stay updated with the latest from the automotive community</p>
-      </div>
+    <div className="mx-auto max-w-7xl">
+      <section className="relative mb-8 overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900 px-6 py-9 sm:px-10 sm:py-11">
+        <div className="pointer-events-none absolute -right-14 -top-24 h-80 w-80 rounded-full bg-red-600/15 blur-3xl" />
+        <div className="relative flex flex-wrap items-end justify-between gap-5">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-red-400">The automotive pulse</p>
+            <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">Your <span className="text-red-500">SpeedHype</span> feed</h1>
+            <p className="mt-3 max-w-xl leading-7 text-zinc-400">Fresh stories, new crews, and the latest machines entering the garage.</p>
+          </div>
+          <button onClick={refreshFeed} className="rounded-xl border border-zinc-700 bg-zinc-950/60 px-4 py-2.5 text-sm font-semibold text-zinc-200 hover:border-zinc-500">Refresh feed</button>
+        </div>
+      </section>
 
-      {/* Feed Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Feed */}
-        <div className="lg:col-span-2">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
-            <div className="flex items-center mb-4">
-              <div className="w-10 h-10 bg-gradient-to-r from-red-600 to-orange-600 rounded-full flex items-center justify-center mr-3">
-                <span className="text-white font-bold">SH</span>
+      {error && (
+        <div role="alert" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-900 bg-red-950/50 p-4 text-sm text-red-200">
+          {error}
+          <button onClick={refreshFeed} className="font-semibold underline">Try again</button>
+        </div>
+      )}
+
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_330px]">
+        <section>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-xl font-bold">Latest updates</h2>
+            <span className="text-xs text-zinc-500">Auto-refreshes every minute</span>
+          </div>
+          {loading ? (
+            <div className="space-y-5" aria-label="Loading feed">
+              {[1, 2, 3].map((item) => <div key={item} className="h-72 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900" />)}
+            </div>
+          ) : feed?.items?.length ? (
+            <div className="space-y-5">
+              {feed.items.map((item) => <FeedItem key={item.id} item={item} />)}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/60 px-6 py-16 text-center">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-red-400">Fresh tarmac</p>
+              <h3 className="mt-3 text-xl font-bold">Your feed is ready for its first update.</h3>
+              <p className="mt-2 text-sm text-zinc-400">New blog posts, communities, and car launches will show up here.</p>
+              <div className="mt-5 flex flex-wrap justify-center gap-3">
+                <Link to="/blogs/new" className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold hover:bg-red-500">Write a story</Link>
+                <Link to="/communities/new" className="rounded-xl border border-zinc-700 px-4 py-2.5 text-sm font-semibold hover:bg-zinc-800">Create community</Link>
               </div>
+            </div>
+          )}
+        </section>
+
+        <aside className="space-y-5 lg:sticky lg:top-24">
+          <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+            <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-bold">What's on your mind?</h3>
-                <p className="text-sm text-zinc-400">Share your latest build or discovery</p>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-red-400">The paddock</p>
+                <h2 className="mt-1 text-lg font-bold">Trending topics</h2>
               </div>
+              <span className="text-lg text-red-400" aria-hidden="true">↗</span>
             </div>
-            <textarea 
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-4 text-white placeholder-zinc-500 focus:outline-none focus:border-red-500"
-              placeholder="Share your latest automotive update..."
-              rows="3"
-            />
-            <div className="flex justify-between items-center mt-4">
-              <div className="flex space-x-4">
-                <button className="text-zinc-400 hover:text-white">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </button>
-                <button className="text-zinc-400 hover:text-white">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                  </svg>
-                </button>
-              </div>
-              <button className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-medium py-2 px-6 rounded-lg">
-                Post
-              </button>
+            {loading ? <div className="mt-4 h-32 animate-pulse rounded-xl bg-zinc-800" /> : feed?.trendingTopics?.length ? (
+              <ol className="mt-4 space-y-1">
+                {feed.trendingTopics.map((topic, index) => (
+                  <li key={topic.tag} className="flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 hover:bg-zinc-800">
+                    <span className="flex min-w-0 items-center gap-3">
+                      <span className="text-xs font-bold text-zinc-600">0{index + 1}</span>
+                      <span className="truncate font-semibold text-zinc-200">#{topic.tag}</span>
+                    </span>
+                    <span className="shrink-0 text-xs text-zinc-500">{topic.postCount} {topic.postCount === 1 ? 'story' : 'stories'}</span>
+                  </li>
+                ))}
+              </ol>
+            ) : <p className="mt-4 text-sm text-zinc-500">Topics will trend as more stories are published.</p>}
+          </section>
+
+          <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-orange-300">Find your crew</p>
+              <h2 className="mt-1 text-lg font-bold">Suggested communities</h2>
             </div>
-          </div>
-
-          {/* Feed Items */}
-          <div className="space-y-6">
-            {[1, 2, 3].map((item) => (
-              <div key={item} className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-                <div className="flex items-start mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-red-600 to-orange-600 rounded-full flex items-center justify-center mr-4">
-                    <span className="text-white font-bold">U{item}</span>
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-bold">Automotive Enthusiast {item}</h4>
-                        <p className="text-sm text-zinc-400">Posted {item * 2} hours ago</p>
-                      </div>
-                      <button className="text-zinc-400 hover:text-white">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                
-                <p className="mb-4">
-                  Just finished installing a new turbo kit on my project car! The difference in performance is incredible. 
-                  Can't wait to take it to the track this weekend.
-                </p>
-                
-                <div className="bg-zinc-800 rounded-lg p-4 mb-4">
-                  <div className="flex items-center mb-2">
-                    <svg className="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span className="font-medium">Track Day - This Saturday</span>
-                  </div>
-                  <p className="text-sm text-zinc-400">
-                    Local circuit • 10AM - 6PM • All skill levels welcome
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between border-t border-zinc-800 pt-4">
-                  <div className="flex space-x-6">
-                    <button className="flex items-center text-zinc-400 hover:text-red-500">
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-                      </svg>
-                      <span>42</span>
-                    </button>
-                    <button className="flex items-center text-zinc-400 hover:text-blue-500">
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                      </svg>
-                      <span>8</span>
-                    </button>
-                    <button className="flex items-center text-zinc-400 hover:text-green-500">
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                      </svg>
-                      <span>Share</span>
-                    </button>
-                  </div>
-                </div>
+            {loading ? <div className="mt-4 h-32 animate-pulse rounded-xl bg-zinc-800" /> : feed?.suggestedCommunities?.length ? (
+              <div className="mt-4 space-y-3">
+                {feed.suggestedCommunities.map((community) => (
+                  <Link key={community.id} to={community.href} className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-zinc-800">
+                    {community.coverImage ? (
+                      <img src={community.coverImage} alt="" className="h-12 w-12 shrink-0 rounded-lg object-cover" />
+                    ) : (
+                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-red-700 to-zinc-800 text-lg font-black text-white">{community.name.charAt(0)}</span>
+                    )}
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-bold text-zinc-200">{community.name}</span>
+                      <span className="block text-xs text-zinc-500">{community.category} · {community.memberCount} members</span>
+                    </span>
+                    <span className="text-zinc-500" aria-hidden="true">→</span>
+                  </Link>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
+            ) : <p className="mt-4 text-sm text-zinc-500">You’re caught up on every community. Nice.</p>}
+            <Link to="/communities" className="mt-4 inline-flex text-sm font-bold text-red-400 hover:text-red-300">Explore all communities →</Link>
+          </section>
 
-        {/* Sidebar */}
-        <div className="lg:col-span-1">
-          {/* Trending */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
-            <h3 className="text-xl font-bold mb-4">Trending Topics</h3>
-            <div className="space-y-3">
+          <section className="rounded-2xl border border-red-950 bg-gradient-to-br from-red-950/60 to-zinc-900 p-5">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-red-300">Your SpeedHype</p>
+            <p className="mt-2 text-sm leading-6 text-zinc-300">Stories and garages added by the community, all in one place.</p>
+            <div className="mt-4 grid grid-cols-3 gap-2">
               {[
-                { tag: '#TurboUpgrade', posts: '142' },
-                { tag: '#TrackDay', posts: '89' },
-                { tag: '#ProjectCar', posts: '76' },
-                { tag: '#PerformanceTuning', posts: '64' },
-                { tag: '#ElectricConversion', posts: '45' }
-              ].map((topic, index) => (
-                <div key={index} className="flex justify-between items-center p-3 hover:bg-zinc-800 rounded-lg cursor-pointer">
-                  <span className="font-medium">{topic.tag}</span>
-                  <span className="text-sm text-zinc-400">{topic.posts} posts</span>
+                ['Stories', feed?.counts?.blogs],
+                ['Crews', feed?.counts?.communities],
+                ['Launches', feed?.counts?.vehicles],
+              ].map(([label, count]) => (
+                <div key={label} className="rounded-xl border border-white/5 bg-black/20 p-3 text-center">
+                  <p className="text-lg font-black">{count ?? '—'}</p>
+                  <p className="text-[11px] text-zinc-500">{label}</p>
                 </div>
               ))}
             </div>
-          </div>
-
-          {/* Suggested Communities */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-            <h3 className="text-xl font-bold mb-4">Suggested Communities</h3>
-            <div className="space-y-4">
-              {[
-                { name: 'JDM Enthusiasts', members: '5.2k', color: 'from-red-600 to-orange-600' },
-                { name: 'Electric Vehicle Builders', members: '3.8k', color: 'from-green-600 to-emerald-600' },
-                { name: 'Classic Car Restoration', members: '2.9k', color: 'from-blue-600 to-cyan-600' },
-                { name: 'Track & Performance', members: '4.1k', color: 'from-purple-600 to-pink-600' }
-              ].map((community, index) => (
-                <div key={index} className="flex items-center p-3 hover:bg-zinc-800 rounded-lg cursor-pointer">
-                  <div className={`w-10 h-10 bg-gradient-to-r ${community.color} rounded-lg flex items-center justify-center mr-3`}>
-                    <span className="text-white font-bold">{community.name.charAt(0)}</span>
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium">{community.name}</h4>
-                    <p className="text-sm text-zinc-400">{community.members} members</p>
-                  </div>
-                  <button className="text-sm bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1 rounded-lg">
-                    Join
-                  </button>
-                </div>
-              ))}
-            </div>
-            <Link 
-              to="/communities" 
-              className="block text-center mt-4 text-red-500 hover:text-red-400 font-medium"
-            >
-              View all communities →
-            </Link>
-          </div>
-        </div>
+          </section>
+        </aside>
       </div>
     </div>
   )

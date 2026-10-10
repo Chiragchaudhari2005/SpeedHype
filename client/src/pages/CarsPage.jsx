@@ -1,4 +1,29 @@
+import { useEffect, useState } from 'react'
+import { useAuth } from '@clerk/react'
+import { Link } from 'react-router-dom'
+import { authenticatedRequest } from '../services/api'
+
 const CarsPage = () => {
+  const { getToken } = useAuth()
+  const [databaseVehicles, setDatabaseVehicles] = useState([])
+  const [databaseLoading, setDatabaseLoading] = useState(true)
+  const [databaseError, setDatabaseError] = useState('')
+
+  useEffect(() => {
+    let active = true
+    authenticatedRequest(getToken, 'GET', '/cars')
+      .then((response) => {
+        if (active) setDatabaseVehicles(response.data.vehicles)
+      })
+      .catch((requestError) => {
+        if (active) setDatabaseError(requestError.response?.data?.message || 'Database vehicles could not be loaded.')
+      })
+      .finally(() => {
+        if (active) setDatabaseLoading(false)
+      })
+    return () => { active = false }
+  }, [getToken])
+
   const cars = [
     {
       id: 1,
@@ -123,9 +148,14 @@ const CarsPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Cars</h1>
-        <p className="text-zinc-400">Explore vehicle specifications, modifications, and performance data</p>
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-4xl font-bold mb-2">Cars</h1>
+          <p className="text-zinc-400">Explore vehicle specifications, modifications, and performance data</p>
+        </div>
+        <Link to="/cars/new" className="rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-5 py-3 text-sm font-bold text-white hover:brightness-110">
+          + Add car launch
+        </Link>
       </div>
 
       {/* Search and Filter Bar */}
@@ -194,6 +224,42 @@ const CarsPage = () => {
           </div>
         </div>
       </div>
+
+      {(databaseLoading || databaseVehicles.length > 0 || databaseError) && (
+        <section className="mb-10">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-300">Added by the community</p>
+              <h2 className="mt-1 text-2xl font-bold">Latest car launches</h2>
+            </div>
+            <Link to="/feed" className="text-sm font-semibold text-red-400 hover:text-red-300">View in feed →</Link>
+          </div>
+          {databaseError && <p role="alert" className="mb-4 rounded-xl border border-red-900 bg-red-950/50 p-4 text-sm text-red-200">{databaseError}</p>}
+          {databaseLoading ? (
+            <div className="h-52 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900" />
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {databaseVehicles.slice(0, 6).map((vehicle) => (
+                <article key={vehicle._id} className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900">
+                  {vehicle.imageUrl ? (
+                    <img src={vehicle.imageUrl} alt="" className="aspect-[16/9] w-full object-cover" />
+                  ) : (
+                    <div className="flex aspect-[16/9] items-end bg-gradient-to-br from-emerald-950 via-zinc-900 to-zinc-950 p-5">
+                      <span className="text-6xl font-black italic text-white/10">{vehicle.make?.charAt(0)}</span>
+                    </div>
+                  )}
+                  <div className="p-5">
+                    <p className="text-xs font-bold uppercase tracking-wider text-emerald-300">{vehicle.category} · {vehicle.year}</p>
+                    <h3 className="mt-2 text-xl font-bold">{vehicle.make} {vehicle.model}</h3>
+                    {vehicle.summary && <p className="mt-2 line-clamp-2 text-sm leading-6 text-zinc-400">{vehicle.summary}</p>}
+                    <p className="mt-3 text-xs text-zinc-500">Added {new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(vehicle.createdAt))}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Cars Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

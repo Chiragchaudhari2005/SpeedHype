@@ -1,4 +1,5 @@
 import express from 'express';
+import { getAuth } from '@clerk/express';
 import { requireAuth } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -10,8 +11,7 @@ const router = express.Router();
  */
 router.get('/me', requireAuth(), (req, res) => {
     try {
-        // req.auth is populated by Clerk middleware
-        const user = req.auth;
+        const user = getAuth(req);
         
         res.status(200).json({
             success: true,

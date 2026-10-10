@@ -1,221 +1,184 @@
+import { useEffect, useState } from 'react'
+import { useAuth, useUser } from '@clerk/react'
+import { Link } from 'react-router-dom'
+import { authenticatedRequest } from '../services/api'
+
+const categories = ['Cars', 'Bikes', 'EVs', 'Modifications', 'Racing', 'Restoration', 'Off-road', 'General']
+
 const CommunitiesPage = () => {
-  const communities = [
-    {
-      name: 'JDM Enthusiasts',
-      description: 'Japanese Domestic Market fans sharing builds, tips, and meets',
-      members: '5,234',
-      posts: '12,847',
-      color: 'from-red-600 to-orange-600',
-      tags: ['JDM', 'Imports', 'Tuning', 'Meets']
-    },
-    {
-      name: 'Electric Vehicle Builders',
-      description: 'EV conversions, battery tech, and electric performance discussions',
-      members: '3,812',
-      posts: '8,942',
-      color: 'from-green-600 to-emerald-600',
-      tags: ['EV', 'Conversion', 'Battery', 'Performance']
-    },
-    {
-      name: 'Classic Car Restoration',
-      description: 'Preserving and restoring vintage automobiles to their former glory',
-      members: '2,956',
-      posts: '6,123',
-      color: 'from-blue-600 to-cyan-600',
-      tags: ['Classic', 'Restoration', 'Vintage', 'Preservation']
-    },
-    {
-      name: 'Track & Performance',
-      description: 'Circuit racing, time attacks, and performance tuning enthusiasts',
-      members: '4,128',
-      posts: '9,876',
-      color: 'from-purple-600 to-pink-600',
-      tags: ['Track', 'Racing', 'Performance', 'Tuning']
-    },
-    {
-      name: 'Off-Road & 4x4',
-      description: 'Adventure vehicles, overlanding, and off-road modifications',
-      members: '3,245',
-      posts: '7,543',
-      color: 'from-yellow-600 to-amber-600',
-      tags: ['OffRoad', '4x4', 'Overland', 'Adventure']
-    },
-    {
-      name: 'Motorcycle Crew',
-      description: 'Two-wheel enthusiasts sharing rides, mods, and group rides',
-      members: '2,678',
-      posts: '5,432',
-      color: 'from-indigo-600 to-violet-600',
-      tags: ['Motorcycle', 'Bikes', 'Rides', 'Mods']
-    },
-    {
-      name: 'Drift Community',
-      description: 'Slide enthusiasts sharing techniques, events, and build logs',
-      members: '1,987',
-      posts: '4,321',
-      color: 'from-rose-600 to-pink-600',
-      tags: ['Drift', 'Slide', 'Events', 'Technique']
-    },
-    {
-      name: 'Luxury & Exotic',
-      description: 'High-end and exotic car discussions, reviews, and ownership experiences',
-      members: '1,543',
-      posts: '3,210',
-      color: 'from-gray-600 to-zinc-600',
-      tags: ['Luxury', 'Exotic', 'Supercars', 'Hypercars']
-    },
-    {
-      name: 'DIY Mechanics',
-      description: 'Home garage projects, tool recommendations, and repair guides',
-      members: '4,567',
-      posts: '11,234',
-      color: 'from-teal-600 to-cyan-600',
-      tags: ['DIY', 'Mechanics', 'Tools', 'Repair']
+  const { getToken } = useAuth()
+  const { user } = useUser()
+  const [communities, setCommunities] = useState([])
+  const [search, setSearch] = useState('')
+  const [category, setCategory] = useState('all')
+  const [view, setView] = useState('discover')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const [retryCount, setRetryCount] = useState(0)
+  const [pendingId, setPendingId] = useState('')
+
+  useEffect(() => {
+    let active = true
+    const timer = window.setTimeout(async () => {
+      setLoading(true)
+      setError('')
+      try {
+        const response = await authenticatedRequest(getToken, 'GET', '/communities', null, {
+          params: { search, category, mine: String(view === 'joined') },
+        })
+        if (active) setCommunities(response.data.communities)
+      } catch (requestError) {
+        if (active) setError(requestError.response?.data?.message || 'Communities could not be loaded.')
+      } finally {
+        if (active) setLoading(false)
+      }
+    }, search ? 250 : 0)
+    return () => {
+      active = false
+      window.clearTimeout(timer)
     }
-  ]
+  }, [category, getToken, retryCount, search, view])
+
+  const toggleMembership = async (community) => {
+    setPendingId(community._id)
+    setNotice('')
+    setError('')
+    try {
+      const response = await authenticatedRequest(
+        getToken,
+        'POST',
+        `/communities/${community._id}/${community.isMember ? 'leave' : 'join'}`,
+        { displayName: user?.fullName || 'SpeedHype member', imageUrl: user?.imageUrl || '' },
+      )
+      if (view === 'joined' && !response.data.community.isMember) {
+        setCommunities((items) => items.filter((item) => item._id !== community._id))
+      } else {
+        setCommunities((items) => items.map((item) => (
+          item._id === community._id ? response.data.community : item
+        )))
+      }
+      setNotice(response.data.community.isMember ? `Joined ${community.name}.` : `Left ${community.name}.`)
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || 'Membership could not be updated.')
+    } finally {
+      setPendingId('')
+    }
+  }
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Communities</h1>
-        <p className="text-zinc-400">Join niche groups for specific brands, models, or types of vehicles</p>
-      </div>
-
-      {/* Search and Filter */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input
-                type="text"
-                placeholder="Search communities..."
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-10 pr-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-red-500"
-              />
-            </div>
+    <div className="mx-auto max-w-7xl">
+      <section className="relative mb-8 overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900 px-6 py-9 sm:px-10 sm:py-12">
+        <div className="pointer-events-none absolute -right-20 -top-24 h-80 w-80 rounded-full bg-orange-600/10 blur-3xl" />
+        <div className="relative flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <div className="max-w-2xl">
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-red-400">Find your people</p>
+            <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">Built around <span className="text-red-500">what you drive.</span></h1>
+            <p className="mt-4 max-w-xl leading-7 text-zinc-400">
+              Join the garages, paddocks, and group rides where the best automotive conversations happen.
+            </p>
           </div>
-          <div className="flex space-x-4">
-            <select className="bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500">
-              <option>All Categories</option>
-              <option>Brand Specific</option>
-              <option>Vehicle Type</option>
-              <option>Activity Based</option>
-              <option>Technical</option>
-            </select>
-            <button className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-medium px-6 py-3 rounded-lg">
-              Create Community
-            </button>
-          </div>
+          <Link to="/communities/new" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-orange-600 px-5 py-3 font-bold text-white shadow-lg shadow-red-950/40 hover:brightness-110">
+            <span className="text-xl leading-none">+</span> Create community
+          </Link>
         </div>
+      </section>
+
+      <section className="mb-7 grid gap-3 rounded-2xl border border-zinc-800 bg-zinc-900 p-4 sm:grid-cols-[minmax(0,1fr)_210px] sm:p-5">
+        <label className="relative">
+          <span className="sr-only">Search communities</span>
+          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500">⌕</span>
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search communities"
+            className="w-full rounded-xl border border-zinc-800 bg-zinc-950 py-3 pl-11 pr-4 text-white outline-none placeholder:text-zinc-500 focus:border-red-500"
+          />
+        </label>
+        <label>
+          <span className="sr-only">Filter community category</span>
+          <select value={category} onChange={(event) => setCategory(event.target.value)} className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-white outline-none focus:border-red-500">
+            <option value="all">All categories</option>
+            {categories.map((item) => <option key={item} value={item}>{item}</option>)}
+          </select>
+        </label>
+      </section>
+
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex gap-2 rounded-xl border border-zinc-800 bg-zinc-900 p-1">
+          <button onClick={() => setView('discover')} className={`rounded-lg px-4 py-2 text-sm font-semibold ${view === 'discover' ? 'bg-zinc-700 text-white' : 'text-zinc-400 hover:text-white'}`}>
+            Discover
+          </button>
+          <button onClick={() => setView('joined')} className={`rounded-lg px-4 py-2 text-sm font-semibold ${view === 'joined' ? 'bg-zinc-700 text-white' : 'text-zinc-400 hover:text-white'}`}>
+            Joined
+          </button>
+        </div>
+        <p className="text-sm text-zinc-500">{communities.length} {communities.length === 1 ? 'community' : 'communities'}</p>
       </div>
 
-      {/* Community Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {communities.map((community, index) => (
-          <div key={index} className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden hover:border-zinc-700 transition-all hover:transform hover:-translate-y-1">
-            {/* Community Header */}
-            <div className={`h-32 bg-gradient-to-r ${community.color} relative`}>
-              <div className="absolute bottom-4 left-4">
-                <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center shadow-lg">
-                  <span className={`text-2xl font-bold bg-gradient-to-r ${community.color} bg-clip-text text-transparent`}>
-                    {community.name.charAt(0)}
-                  </span>
-                </div>
-              </div>
-            </div>
+      {notice && <p role="status" className="mb-4 rounded-xl border border-emerald-900 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-200">{notice}</p>}
+      {error && (
+        <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-900 bg-red-950/40 px-4 py-3 text-sm text-red-200">
+          {error}
+          <button onClick={() => setRetryCount((count) => count + 1)} className="font-semibold underline">Try again</button>
+        </div>
+      )}
 
-            {/* Community Info */}
-            <div className="p-6 pt-12">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-xl font-bold mb-1">{community.name}</h3>
-                  <p className="text-zinc-400 text-sm mb-3">{community.description}</p>
-                </div>
-                <button className="text-sm bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-lg">
-                  Join
-                </button>
-              </div>
-
-              {/* Stats */}
-              <div className="flex space-x-6 mb-4">
-                <div>
-                  <p className="text-2xl font-bold">{community.members}</p>
-                  <p className="text-xs text-zinc-400">Members</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{community.posts}</p>
-                  <p className="text-xs text-zinc-400">Posts</p>
-                </div>
-              </div>
-
-              {/* Tags */}
-              <div className="flex flex-wrap gap-2">
-                {community.tags.map((tag, tagIndex) => (
-                  <span 
-                    key={tagIndex} 
-                    className="px-3 py-1 bg-zinc-800 text-zinc-300 rounded-full text-xs"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Active Members */}
-            <div className="px-6 pb-6">
-              <div className="flex items-center justify-between">
-                <div className="flex -space-x-2">
-                  {[1, 2, 3, 4].map((member) => (
-                    <div 
-                      key={member} 
-                      className="w-8 h-8 bg-zinc-800 border-2 border-zinc-900 rounded-full flex items-center justify-center text-xs font-bold"
-                    >
-                      U{member}
-                    </div>
-                  ))}
-                  <div className="w-8 h-8 bg-zinc-800 border-2 border-zinc-900 rounded-full flex items-center justify-center text-xs text-zinc-400">
-                    +{parseInt(community.members.replace(',', '')) - 4}
+      {loading ? (
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3" aria-label="Loading communities">
+          {[1, 2, 3].map((item) => <div key={item} className="h-80 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900" />)}
+        </div>
+      ) : communities.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/60 px-6 py-16 text-center">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-red-400">{view === 'joined' ? 'Your garage is waiting' : 'No communities found'}</p>
+          <h2 className="mt-3 text-2xl font-bold">{view === 'joined' ? 'Join a community to get in on the conversation.' : 'Be the first to start this conversation.'}</h2>
+          <p className="mx-auto mt-2 max-w-md text-zinc-400">{view === 'joined' ? 'Explore groups for your favorite vehicles and interests.' : 'Try another search or create a community around your automotive passion.'}</p>
+          <Link to="/communities/new" className="mt-6 inline-flex rounded-xl bg-red-600 px-5 py-3 font-semibold hover:bg-red-500">Create a community</Link>
+        </div>
+      ) : (
+        <div className="grid auto-rows-fr gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {communities.map((community) => (
+            <article key={community._id} className="group flex h-full flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 transition hover:-translate-y-1 hover:border-zinc-600">
+              <Link to={`/communities/${community._id}`} className="relative block aspect-[16/8] overflow-hidden bg-gradient-to-br from-zinc-800 via-zinc-900 to-red-950">
+                {community.coverImage?.url ? (
+                  <img src={community.coverImage.url} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                ) : (
+                  <div className="flex h-full items-end p-5"><span className="text-7xl font-black italic tracking-tighter text-white/10">SH</span></div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                <span className="absolute bottom-4 left-4 rounded-full border border-white/15 bg-black/55 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur">{community.category}</span>
+              </Link>
+              <div className="flex flex-1 flex-col p-5 sm:p-6">
+                <Link to={`/communities/${community._id}`} className="text-xl font-bold text-white hover:text-red-300">{community.name}</Link>
+                <p className="mt-2 line-clamp-3 min-h-[4.5rem] text-sm leading-6 text-zinc-400">{community.description}</p>
+                <div className="mt-5 flex items-center justify-between border-t border-zinc-800 pt-4">
+                  <div>
+                    <p className="text-lg font-bold text-white">{community.memberCount ?? community.members?.length ?? 0}</p>
+                    <p className="text-xs text-zinc-500">members</p>
+                  </div>
+                  <div className="flex -space-x-2">
+                    {community.members?.slice(0, 4).map((member) => (
+                      member.imageUrl
+                        ? <img key={member.userId} src={member.imageUrl} alt="" title={member.displayName} className="h-8 w-8 rounded-full border-2 border-zinc-900 object-cover" />
+                        : <span key={member.userId} title={member.displayName} className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-zinc-900 bg-zinc-700 text-xs font-bold text-zinc-200">{member.displayName?.charAt(0)?.toUpperCase() || 'S'}</span>
+                    ))}
                   </div>
                 </div>
-                <span className="text-sm text-zinc-400">Active now</span>
+                <div className="mt-5 flex gap-2">
+                  <Link to={`/communities/${community._id}`} className="flex-1 rounded-xl border border-zinc-700 px-4 py-2.5 text-center text-sm font-semibold text-zinc-200 hover:bg-zinc-800">Open community</Link>
+                  <button
+                    disabled={pendingId === community._id}
+                    onClick={() => toggleMembership(community)}
+                    className={`rounded-xl px-4 py-2.5 text-sm font-bold disabled:opacity-50 ${community.isMember ? 'border border-zinc-700 text-zinc-300 hover:border-red-900 hover:text-red-300' : 'bg-red-600 text-white hover:bg-red-500'}`}
+                  >
+                    {pendingId === community._id ? '…' : community.isMember ? 'Leave' : 'Join'}
+                  </button>
+                </div>
               </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Pagination */}
-      <div className="flex justify-center mt-12">
-        <div className="flex items-center space-x-2">
-          <button className="w-10 h-10 bg-zinc-900 border border-zinc-800 rounded-lg flex items-center justify-center text-zinc-400 hover:text-white hover:border-zinc-700">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <button className="w-10 h-10 bg-gradient-to-r from-red-600 to-orange-600 rounded-lg flex items-center justify-center text-white font-bold">
-            1
-          </button>
-          <button className="w-10 h-10 bg-zinc-900 border border-zinc-800 rounded-lg flex items-center justify-center text-zinc-400 hover:text-white hover:border-zinc-700">
-            2
-          </button>
-          <button className="w-10 h-10 bg-zinc-900 border border-zinc-800 rounded-lg flex items-center justify-center text-zinc-400 hover:text-white hover:border-zinc-700">
-            3
-          </button>
-          <button className="w-10 h-10 bg-zinc-900 border border-zinc-800 rounded-lg flex items-center justify-center text-zinc-400 hover:text-white hover:border-zinc-700">
-            ...
-          </button>
-          <button className="w-10 h-10 bg-zinc-900 border border-zinc-800 rounded-lg flex items-center justify-center text-zinc-400 hover:text-white hover:border-zinc-700">
-            10
-          </button>
-          <button className="w-10 h-10 bg-zinc-900 border border-zinc-800 rounded-lg flex items-center justify-center text-zinc-400 hover:text-white hover:border-zinc-700">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+            </article>
+          ))}
         </div>
-      </div>
+      )}
     </div>
   )
 }

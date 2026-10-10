@@ -1,284 +1,219 @@
+import { useEffect, useMemo, useState } from 'react'
+import { useAuth } from '@clerk/react'
 import { Link } from 'react-router-dom'
+import { authenticatedRequest } from '../services/api'
+
+const dateLabel = (date) => new Intl.DateTimeFormat(undefined, {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+}).format(new Date(date))
+
+const categoryOptions = [
+  'Automotive Culture',
+  'Builds & Projects',
+  'EV & Technology',
+  'Guides',
+  'Motorsport',
+  'Off-road',
+  'Performance',
+  'Restoration',
+  'Reviews',
+]
+
+const excerpt = (content) => {
+  const text = content.replace(/\s+/g, ' ').trim()
+  return text.length > 150 ? `${text.slice(0, 150).trim()}…` : text
+}
+
+const displayTag = (tag) => {
+  const normalized = String(tag).trim().replace(/^#+/, '')
+  return normalized ? `#${normalized}` : ''
+}
+
+function BlogCard({ blog }) {
+  return (
+    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 transition hover:-translate-y-1 hover:border-zinc-600">
+      <Link to={`/blogs/${blog._id}`} className="flex h-full flex-col">
+        <div className="relative aspect-[16/9] w-full shrink-0 overflow-hidden bg-gradient-to-br from-zinc-800 via-zinc-900 to-red-950">
+          {blog.coverImage?.url ? (
+            <img
+              src={blog.coverImage.url}
+              alt=""
+              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full items-end p-5">
+              <span className="text-6xl font-black italic tracking-tighter text-white/10">SH</span>
+            </div>
+          )}
+          <span className="absolute left-4 top-4 rounded-full border border-white/15 bg-black/55 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur">
+            {blog.category}
+          </span>
+        </div>
+        <div className="flex flex-1 flex-col p-5 sm:p-6">
+          <h3 className="line-clamp-2 min-h-[3.5rem] text-xl font-bold leading-snug text-white group-hover:text-red-300">
+            {blog.title}
+          </h3>
+          <p className="mt-3 line-clamp-3 min-h-[4.5rem] text-sm leading-6 text-zinc-400">{excerpt(blog.content)}</p>
+          <div className="mt-4 flex h-7 items-center gap-2 overflow-hidden">
+            {blog.tags?.filter((tag) => displayTag(tag)).slice(0, 3).map((tag, index) => (
+              <span key={`${tag}-${index}`} className="shrink-0 max-w-36 truncate rounded-full bg-zinc-800 px-2.5 py-1 text-xs text-zinc-300">
+                {displayTag(tag)}
+              </span>
+            ))}
+          </div>
+          <div className="mt-auto flex items-center justify-between border-t border-zinc-800 pt-4">
+            <div className="flex min-w-0 items-center gap-3">
+              {blog.authorImage ? (
+                <img src={blog.authorImage} alt="" className="h-9 w-9 rounded-full object-cover" />
+              ) : (
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-950 font-bold text-red-300">
+                  {blog.authorName?.charAt(0)?.toUpperCase() || 'S'}
+                </span>
+              )}
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-zinc-200">{blog.authorName}</p>
+                <p className="text-xs text-zinc-500">{dateLabel(blog.createdAt)}</p>
+              </div>
+            </div>
+            <span className="shrink-0 text-sm font-semibold text-red-400">Read story <span aria-hidden="true">↗</span></span>
+          </div>
+        </div>
+      </Link>
+    </article>
+  )
+}
 
 const BlogsPage = () => {
-  const blogs = [
-    {
-      id: 1,
-      title: 'The Complete Guide to Turbocharging Your Daily Driver',
-      excerpt: 'Learn how to add a turbocharger to your daily driver without compromising reliability. We cover everything from turbo selection to tuning and maintenance.',
-      author: 'Mike Chen',
-      date: 'Mar 15, 2024',
-      readTime: '12 min read',
-      category: 'Performance',
-      color: 'from-red-600 to-orange-600',
-      featured: true
-    },
-    {
-      id: 2,
-      title: 'Electric Vehicle Conversions: A Beginner\'s Journey',
-      excerpt: 'Follow our 6-month project converting a classic VW Beetle to electric power. Includes cost breakdowns, challenges faced, and performance results.',
-      author: 'Sarah Johnson',
-      date: 'Feb 28, 2024',
-      readTime: '18 min read',
-      category: 'EV',
-      color: 'from-green-600 to-emerald-600'
-    },
-    {
-      id: 3,
-      title: 'Track Day Essentials: What to Bring for Your First Time',
-      excerpt: 'Preparing for your first track day? This comprehensive checklist covers everything from safety gear to tools and spare parts.',
-      author: 'David Rodriguez',
-      date: 'Feb 15, 2024',
-      readTime: '8 min read',
-      category: 'Track',
-      color: 'from-blue-600 to-cyan-600'
-    },
-    {
-      id: 4,
-      title: 'The Art of Drifting: Techniques and Car Setup',
-      excerpt: 'Master the fundamentals of drifting with our detailed guide to car setup, weight transfer, and throttle control techniques.',
-      author: 'Kenji Tanaka',
-      date: 'Jan 30, 2024',
-      readTime: '15 min read',
-      category: 'Drift',
-      color: 'from-purple-600 to-pink-600'
-    },
-    {
-      id: 5,
-      title: 'Restoring a 1967 Mustang: Part 1 - Body Work',
-      excerpt: 'Join us as we begin the restoration of a classic Mustang. This first installment covers rust repair, panel replacement, and body preparation.',
-      author: 'Robert Miller',
-      date: 'Jan 22, 2024',
-      readTime: '14 min read',
-      category: 'Restoration',
-      color: 'from-yellow-600 to-amber-600'
-    },
-    {
-      id: 6,
-      title: 'Off-Road Lighting Systems: LED vs Halogen vs HID',
-      excerpt: 'Compare different lighting technologies for off-road use. We test brightness, durability, power consumption, and installation complexity.',
-      author: 'Alex Carter',
-      date: 'Jan 10, 2024',
-      readTime: '10 min read',
-      category: 'Off-Road',
-      color: 'from-indigo-600 to-violet-600'
-    },
-    {
-      id: 7,
-      title: 'Building a Home Garage Workshop on a Budget',
-      excerpt: 'Create the perfect workspace without breaking the bank. Includes tool recommendations, organization tips, and essential equipment lists.',
-      author: 'Lisa Wang',
-      date: 'Dec 28, 2023',
-      readTime: '11 min read',
-      category: 'DIY',
-      color: 'from-teal-600 to-cyan-600'
-    },
-    {
-      id: 8,
-      title: 'The Future of Automotive Performance: Hybrid Hypercars',
-      excerpt: 'Explore how hybrid technology is revolutionizing the hypercar segment with insane power figures and unprecedented efficiency.',
-      author: 'James Wilson',
-      date: 'Dec 15, 2023',
-      readTime: '16 min read',
-      category: 'Technology',
-      color: 'from-rose-600 to-pink-600'
+  const { getToken } = useAuth()
+  const [blogs, setBlogs] = useState([])
+  const [search, setSearch] = useState('')
+  const [category, setCategory] = useState('all')
+  const [sort, setSort] = useState('latest')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [retryKey, setRetryKey] = useState(0)
+
+  useEffect(() => {
+    let active = true
+    const timer = window.setTimeout(async () => {
+      setLoading(true)
+      setError('')
+      try {
+        const response = await authenticatedRequest(getToken, 'GET', '/blogs', null, {
+          params: { search, category, sort },
+        })
+        if (active) setBlogs(response.data.blogs)
+      } catch (requestError) {
+        if (active) {
+          setError(requestError.response?.data?.message || 'We could not load the stories right now.')
+        }
+      } finally {
+        if (active) setLoading(false)
+      }
+    }, search ? 250 : 0)
+
+    return () => {
+      active = false
+      window.clearTimeout(timer)
     }
-  ]
+  }, [category, getToken, retryKey, search, sort])
 
-  const categories = [
-    { name: 'All', count: 42 },
-    { name: 'Performance', count: 12 },
-    { name: 'EV', count: 8 },
-    { name: 'Restoration', count: 6 },
-    { name: 'Track', count: 9 },
-    { name: 'Drift', count: 5 },
-    { name: 'Off-Road', count: 7 },
-    { name: 'DIY', count: 15 },
-    { name: 'Technology', count: 11 }
-  ]
-
-  const featuredBlog = blogs.find(blog => blog.featured)
-
+  const categories = useMemo(() => (
+    [...new Set([...categoryOptions, ...blogs.map((blog) => blog.category).filter(Boolean)])]
+      .sort((a, b) => a.localeCompare(b))
+  ), [blogs])
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Blogs</h1>
-        <p className="text-zinc-400">Read and write detailed guides, reviews, and stories about automotive culture and technology</p>
-      </div>
-
-      {/* Featured Blog */}
-      {featuredBlog && (
-        <div className="mb-12">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-            <div className={`h-64 bg-gradient-to-r ${featuredBlog.color} relative`}>
-              <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                <div className="text-center px-8">
-                  <span className="inline-block px-4 py-1 bg-white bg-opacity-20 backdrop-blur-sm text-white rounded-full text-sm font-medium mb-4">
-                    Featured Article
-                  </span>
-                  <h2 className="text-3xl font-bold text-white mb-4">{featuredBlog.title}</h2>
-                  <div className="flex items-center justify-center space-x-4 text-white">
-                    <span>{featuredBlog.author}</span>
-                    <span>•</span>
-                    <span>{featuredBlog.date}</span>
-                    <span>•</span>
-                    <span>{featuredBlog.readTime}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="p-8">
-              <p className="text-lg text-zinc-300 mb-6">{featuredBlog.excerpt}</p>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center">
-                    <span className="font-bold">{featuredBlog.author.charAt(0)}</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">{featuredBlog.author}</p>
-                    <p className="text-sm text-zinc-400">Automotive Journalist</p>
-                  </div>
-                </div>
-                <button className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-medium px-6 py-3 rounded-lg">
-                  Read Full Article
-                </button>
-              </div>
-            </div>
+    <div className="mx-auto max-w-7xl">
+      <section className="relative mb-9 overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900 px-6 py-9 sm:px-10 sm:py-12">
+        <div className="pointer-events-none absolute -right-12 -top-28 h-80 w-80 rounded-full bg-red-600/15 blur-3xl" />
+        <div className="relative flex flex-col justify-between gap-7 md:flex-row md:items-end">
+          <div className="max-w-2xl">
+            <p className="mb-3 text-xs font-bold uppercase tracking-[0.28em] text-red-400">The SpeedHype journal</p>
+            <h1 className="text-4xl font-black tracking-tight sm:text-5xl">Stories built for the <span className="text-red-500">drive.</span></h1>
+            <p className="mt-4 max-w-xl leading-7 text-zinc-400">
+              Real builds, sharp opinions, and deep dives from people who live and breathe cars.
+            </p>
           </div>
+          <Link
+            to="/blogs/new"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-orange-600 px-5 py-3 font-bold text-white shadow-lg shadow-red-950/40 transition hover:brightness-110"
+          >
+            <span className="text-xl leading-none">+</span> Write a story
+          </Link>
+        </div>
+      </section>
+
+      <section className="mb-8 grid gap-3 sm:grid-cols-[minmax(0,1fr)_220px_170px]">
+        <label className="relative">
+          <span className="sr-only">Search stories</span>
+          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500">⌕</span>
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search stories, tags, or authors"
+            className="w-full rounded-xl border border-zinc-800 bg-zinc-900 py-3 pl-11 pr-4 text-white outline-none placeholder:text-zinc-500 focus:border-red-500"
+          />
+        </label>
+        <label>
+          <span className="sr-only">Filter by category</span>
+          <select
+            value={category}
+            onChange={(event) => setCategory(event.target.value)}
+            className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-white outline-none focus:border-red-500"
+          >
+            <option value="all">All categories</option>
+            {categories.map((item) => <option key={item} value={item}>{item}</option>)}
+          </select>
+        </label>
+        <label>
+          <span className="sr-only">Sort stories</span>
+          <select
+            value={sort}
+            onChange={(event) => setSort(event.target.value)}
+            className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-white outline-none focus:border-red-500"
+          >
+            <option value="latest">Latest first</option>
+            <option value="oldest">Oldest first</option>
+          </select>
+        </label>
+      </section>
+
+      {error && (
+        <div role="alert" className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-red-900 bg-red-950/50 p-4 text-sm text-red-200">
+          <span>{error}</span>
+          <button onClick={() => setRetryKey((value) => value + 1)} className="font-semibold underline">Try again</button>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Sidebar */}
-        <div className="lg:col-span-1">
-          {/* Categories */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
-            <h3 className="text-xl font-bold mb-4">Categories</h3>
-            <div className="space-y-2">
-              {categories.map((category, index) => (
-                <div 
-                  key={index} 
-                  className="flex items-center justify-between p-3 hover:bg-zinc-800 rounded-lg cursor-pointer"
-                >
-                  <span className="font-medium">{category.name}</span>
-                  <span className="text-sm text-zinc-400">{category.count}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Write Blog */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-            <h3 className="text-xl font-bold mb-4">Share Your Knowledge</h3>
-            <p className="text-zinc-400 mb-4">
-              Have expertise to share? Write a blog post and help the community learn.
-            </p>
-            <button className="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-medium py-3 rounded-lg mb-4">
-              Write a Blog Post
-            </button>
-            <p className="text-sm text-zinc-400">
-              Writing guidelines and tips are available in our{' '}
-              <Link to="#" className="text-red-500 hover:text-red-400">contributor guide</Link>.
-            </p>
-          </div>
-
-          {/* Newsletter */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mt-6">
-            <h3 className="text-xl font-bold mb-4">Stay Updated</h3>
-            <p className="text-zinc-400 mb-4">
-              Get weekly articles and guides delivered to your inbox.
-            </p>
-            <div className="space-y-3">
-              <input
-                type="email"
-                placeholder="Your email"
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-red-500"
-              />
-              <button className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-medium py-3 rounded-lg">
-                Subscribe
-              </button>
-            </div>
-          </div>
+      {loading ? (
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3" aria-label="Loading stories">
+          {[1, 2, 3].map((item) => (
+            <div key={item} className="h-80 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900" />
+          ))}
         </div>
-
-        {/* Blog Grid */}
-        <div className="lg:col-span-3">
-          <div className="flex items-center justify-between mb-6">
+      ) : blogs.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/60 px-6 py-16 text-center">
+          <p className="text-sm font-bold uppercase tracking-[0.2em] text-red-400">No stories found</p>
+          <h2 className="mt-3 text-2xl font-bold">Your next read is waiting to be written.</h2>
+          <p className="mx-auto mt-2 max-w-md text-zinc-400">Try another search, or be the first to share something with the SpeedHype community.</p>
+          <Link to="/blogs/new" className="mt-6 inline-flex rounded-xl bg-red-600 px-5 py-3 font-semibold hover:bg-red-500">Create a story</Link>
+        </div>
+      ) : (
+        <section>
+          <div className="mb-5 flex items-end justify-between">
             <div>
-              <h2 className="text-2xl font-bold">Latest Articles</h2>
-              <p className="text-zinc-400">Recently published community content</p>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-red-400">From the community</p>
+              <h2 className="mt-1 text-2xl font-bold">Latest stories</h2>
             </div>
-            <div className="flex space-x-4">
-              <select className="bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-red-500">
-                <option>Newest First</option>
-                <option>Most Popular</option>
-                <option>Oldest First</option>
-              </select>
-            </div>
+            <p className="text-sm text-zinc-500">{blogs.length} {blogs.length === 1 ? 'story' : 'stories'}</p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {blogs.filter(blog => !blog.featured).map((blog) => (
-              <div key={blog.id} className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden hover:border-zinc-700 transition-all">
-                {/* Blog Header */}
-                <div className={`h-40 bg-gradient-to-r ${blog.color} relative`}>
-                  <div className="absolute top-4 left-4">
-                    <span className="px-3 py-1 bg-white bg-opacity-20 backdrop-blur-sm text-white rounded-full text-sm font-medium">
-                      {blog.category}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Blog Content */}
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-3">{blog.title}</h3>
-                  <p className="text-zinc-400 mb-4">{blog.excerpt}</p>
-                  
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center">
-                        <span className="text-xs font-bold">{blog.author.charAt(0)}</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">{blog.author}</p>
-                        <p className="text-xs text-zinc-400">{blog.date}</p>
-                      </div>
-                    </div>
-                    <span className="text-sm text-zinc-400">{blog.readTime}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
-                    <div className="flex items-center space-x-4">
-                      <button className="flex items-center text-zinc-400 hover:text-red-500">
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-                        </svg>
-                        <span>42</span>
-                      </button>
-                      <button className="flex items-center text-zinc-400 hover:text-blue-500">
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                        </svg>
-                        <span>8</span>
-                      </button>
-                    </div>
-                    <button className="text-red-500 hover:text-red-400 font-medium">
-                      Read More →
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="grid auto-rows-fr gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {blogs.map((blog) => <BlogCard key={blog._id} blog={blog} />)}
           </div>
-
-          {/* Load More */}
-          <div className="text-center mt-12">
-            <button className="bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-white font-medium px-8 py-3 rounded-lg">
-              Load More Articles
-            </button>
-          </div>
-        </div>
-      </div>
+        </section>
+      )}
     </div>
   )
 }
