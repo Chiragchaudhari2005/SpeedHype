@@ -1,345 +1,601 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useAuth } from '@clerk/react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { authenticatedRequest } from '../services/api'
 
-const ComparePage = () => {
-  const [selectedCars, setSelectedCars] = useState([1, 2]) // Default compare Toyota Supra and Ford Mustang
+const formatPrice = (amount, currency = '') => {
+  if (amount == null) return 'Price not listed'
+  if (!currency) return `${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(amount)} · currency not listed`
+  return new Intl.NumberFormat('en-IN', { style: 'currency', currency, maximumFractionDigits: 0 }).format(amount)
+}
 
-  const cars = [
-    {
-      id: 1,
-      make: 'Toyota',
-      model: 'Supra MK5',
-      year: '2024',
-      imageColor: 'from-red-600 to-orange-600',
-      specs: {
-        price: '$53,000',
-        engine: '3.0L Twin-Scroll Turbo I6',
-        horsepower: '382 hp',
-        torque: '368 lb-ft',
-        acceleration: '4.1s (0-60 mph)',
-        topSpeed: '155 mph',
-        weight: '3,397 lbs',
-        transmission: '8-Speed Auto',
-        driveType: 'Rear-Wheel Drive',
-        fuelEconomy: '25 mpg combined',
-        seating: '2'
-      },
-      pros: ['Excellent handling', 'Great value', 'Modern tech', 'Reliable'],
-      cons: ['Limited cargo space', 'Artificial steering feel', 'Backseat? What backseat?']
-    },
-    {
-      id: 2,
-      make: 'Ford',
-      model: 'Mustang GT',
-      year: '2024',
-      imageColor: 'from-blue-600 to-cyan-600',
-      specs: {
-        price: '$42,000',
-        engine: '5.0L Coyote V8',
-        horsepower: '480 hp',
-        torque: '415 lb-ft',
-        acceleration: '4.2s (0-60 mph)',
-        topSpeed: '155 mph',
-        weight: '3,705 lbs',
-        transmission: '6-Speed Manual',
-        driveType: 'Rear-Wheel Drive',
-        fuelEconomy: '19 mpg combined',
-        seating: '4'
-      },
-      pros: ['V8 soundtrack', 'Manual transmission', 'More practical', 'American muscle'],
-      cons: ['Worse fuel economy', 'Heavier', 'Interior quality', 'Less precise handling']
-    },
-    {
-      id: 3,
-      make: 'Porsche',
-      model: '911 Carrera',
-      year: '2024',
-      imageColor: 'from-gray-600 to-zinc-600',
-      specs: {
-        price: '$113,000',
-        engine: '3.0L Twin-Turbo Flat-6',
-        horsepower: '379 hp',
-        torque: '331 lb-ft',
-        acceleration: '4.0s (0-60 mph)',
-        topSpeed: '182 mph',
-        weight: '3,298 lbs',
-        transmission: '8-Speed PDK',
-        driveType: 'Rear-Wheel Drive',
-        fuelEconomy: '22 mpg combined',
-        seating: '2+2'
-      },
-      pros: ['Superb handling', 'High-quality interior', 'Porsche heritage', 'Daily drivable'],
-      cons: ['Very expensive', 'Limited rear seats', 'Costly maintenance', 'Less power for price']
-    },
-    {
-      id: 4,
-      make: 'Tesla',
-      model: 'Model 3 Performance',
-      year: '2024',
-      imageColor: 'from-green-600 to-emerald-600',
-      specs: {
-        price: '$53,000',
-        engine: 'Dual Motor AWD',
-        horsepower: '510 hp',
-        torque: '547 lb-ft',
-        acceleration: '3.1s (0-60 mph)',
-        topSpeed: '162 mph',
-        weight: '4,065 lbs',
-        transmission: 'Single-Speed',
-        driveType: 'All-Wheel Drive',
-        fuelEconomy: '130 MPGe',
-        seating: '5'
-      },
-      pros: ['Instant torque', 'Low operating costs', 'High tech', 'Practical'],
-      cons: ['Battery degradation', 'Charging infrastructure', 'Build quality', 'No engine sound']
+const standardSpecRows = [
+  { section: 'Key Details', label: 'Starting Price', getVal: (car) => formatPrice(car.priceAmount, car.priceCurrency) },
+  { section: 'Key Details', label: 'Category', getVal: (car) => car.category ? car.category.toUpperCase() : null },
+  { section: 'Key Details', label: 'Model Year', getVal: (car) => car.launchYear ? String(car.launchYear) : null },
+  { section: 'Key Details', label: 'Seating Capacity', getVal: (car) => car.seatingCapacity != null ? `${car.seatingCapacity} Persons` : null },
+
+  { section: 'Powertrain & Performance', label: 'Fuel Type', getVal: (car) => car.fuelType || null },
+  { section: 'Powertrain & Performance', label: 'Transmission', getVal: (car) => car.transmission || null },
+  { section: 'Powertrain & Performance', label: 'Engine Capacity', getVal: (car) => car.engine || null },
+  { section: 'Powertrain & Performance', label: 'Power / Horsepower', getVal: (car) => car.horsepower != null ? `${car.horsepower} ${car.horsepowerUnit || 'bhp'}` : null },
+  { section: 'Powertrain & Performance', label: 'Peak Torque', getVal: (car) => car.torque != null ? `${car.torque} ${car.torqueUnit || 'Nm'}` : null },
+  { section: 'Powertrain & Performance', label: 'Mileage / Range', getVal: (car) => car.mileage != null ? `${car.mileage} ${car.mileageUnit || 'kmpl'}` : null },
+
+  { section: 'Dimensions & Capacity', label: 'Length', getVal: (car) => car.specifications?.['Length'] || car.specifications?.['length'] || null },
+  { section: 'Dimensions & Capacity', label: 'Width', getVal: (car) => car.specifications?.['Width'] || car.specifications?.['width'] || null },
+  { section: 'Dimensions & Capacity', label: 'Height', getVal: (car) => car.specifications?.['Height'] || car.specifications?.['height'] || null },
+  { section: 'Dimensions & Capacity', label: 'Wheelbase', getVal: (car) => car.specifications?.['Wheelbase'] || car.specifications?.['wheelbase'] || null },
+  { section: 'Dimensions & Capacity', label: 'Ground Clearance', getVal: (car) => car.specifications?.['Ground Clearance'] || car.specifications?.['ground clearance'] || null },
+  { section: 'Dimensions & Capacity', label: 'Boot Space', getVal: (car) => car.specifications?.['Boot Space'] || car.specifications?.['boot space'] || null },
+  { section: 'Dimensions & Capacity', label: 'Battery Capacity (EV)', getVal: (car) => car.specifications?.['Battery Capacity'] || car.specifications?.['battery capacity'] || null },
+]
+
+export default function ComparePage() {
+  const { getToken } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const [cars, setCars] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [highlightDifferences, setHighlightDifferences] = useState(false)
+
+  // Selector modal state
+  const [selectorOpen, setSelectorOpen] = useState(false)
+  const [targetSlotIndex, setTargetSlotIndex] = useState(null)
+  const [catalogCars, setCatalogCars] = useState([])
+  const [selectorSearch, setSelectorSearch] = useState('')
+  const [searchingCatalog, setSearchingCatalog] = useState(false)
+
+  // Parse car IDs from URL param (e.g. ?cars=id1,id2)
+  const carIdsFromUrl = useMemo(() => {
+    const raw = searchParams.get('cars') || searchParams.get('ids') || ''
+    return raw.split(',').map((id) => id.trim()).filter(Boolean)
+  }, [searchParams])
+
+  // Load cars for comparison
+  const loadComparison = useCallback(async () => {
+    if (!carIdsFromUrl.length) {
+      // If no IDs in URL, fetch initial 2 cars from catalog to give a rich first impression
+      try {
+        setLoading(true)
+        const response = await authenticatedRequest(getToken, 'GET', '/car-catalog?limit=2')
+        if (response.data?.cars?.length >= 2) {
+          const defaultIds = response.data.cars.map((c) => c._id)
+          setSearchParams({ cars: defaultIds.join(',') }, { replace: true })
+        } else {
+          setCars(response.data?.cars || [])
+          setLoading(false)
+        }
+      } catch (err) {
+        setError(err.response?.data?.message || 'Could not load initial comparison.')
+        setLoading(false)
+      }
+      return
     }
-  ]
 
-  const specificationCategories = [
-    { label: 'Price', key: 'price' },
-    { label: 'Engine', key: 'engine' },
-    { label: 'Horsepower', key: 'horsepower' },
-    { label: 'Torque', key: 'torque' },
-    { label: '0-60 mph', key: 'acceleration' },
-    { label: 'Top Speed', key: 'topSpeed' },
-    { label: 'Weight', key: 'weight' },
-    { label: 'Transmission', key: 'transmission' },
-    { label: 'Drive Type', key: 'driveType' },
-    { label: 'Fuel Economy', key: 'fuelEconomy' },
-    { label: 'Seating', key: 'seating' }
-  ]
+    setLoading(true)
+    setError('')
+    try {
+      const response = await authenticatedRequest(getToken, 'GET', `/car-catalog/compare?ids=${carIdsFromUrl.join(',')}`)
+      setCars(response.data?.cars || [])
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load cars for comparison.')
+    } finally {
+      setLoading(false)
+    }
+  }, [getToken, carIdsFromUrl, setSearchParams])
 
-  const handleSelectCar = (carId) => {
-    if (selectedCars.includes(carId)) {
-      // Don't allow removing if only 2 cars left
-      if (selectedCars.length > 2) {
-        setSelectedCars(selectedCars.filter(id => id !== carId))
-      }
+  useEffect(() => {
+    const timer = window.setTimeout(loadComparison, 0)
+    return () => window.clearTimeout(timer)
+  }, [loadComparison])
+
+  // Fetch catalog vehicles for the selector modal
+  const searchCatalog = useCallback(async (query = '') => {
+    setSearchingCatalog(true)
+    try {
+      const params = new URLSearchParams({ limit: '18' })
+      if (query.trim()) params.set('search', query.trim())
+      const response = await authenticatedRequest(getToken, 'GET', `/car-catalog?${params}`)
+      setCatalogCars(response.data?.cars || [])
+    } catch {
+      // keep existing catalog cars on error
+    } finally {
+      setSearchingCatalog(false)
+    }
+  }, [getToken])
+
+  const openVehicleSelector = (slotIndex) => {
+    setTargetSlotIndex(slotIndex)
+    setSelectorSearch('')
+    setSelectorOpen(true)
+    searchCatalog('')
+  }
+
+  const handleSelectorSearchChange = (e) => {
+    const val = e.target.value
+    setSelectorSearch(val)
+    searchCatalog(val)
+  }
+
+  const handleSelectCarForSlot = (selectedCar) => {
+    const newCars = [...cars]
+    if (targetSlotIndex != null && targetSlotIndex < newCars.length) {
+      // Replace existing slot
+      newCars[targetSlotIndex] = selectedCar
     } else {
-      // Don't allow selecting more than 4 cars
-      if (selectedCars.length < 4) {
-        setSelectedCars([...selectedCars, carId])
-      }
+      // Add as new slot
+      newCars.push(selectedCar)
+    }
+
+    const uniqueIds = [...new Set(newCars.map((c) => c._id))].slice(0, 4)
+    setSearchParams({ cars: uniqueIds.join(',') })
+    setSelectorOpen(false)
+    setTargetSlotIndex(null)
+  }
+
+  const handleRemoveCar = (indexToRemove) => {
+    const updated = cars.filter((_, i) => i !== indexToRemove)
+    setCars(updated)
+    const newIds = updated.map((c) => c._id)
+    if (newIds.length) {
+      setSearchParams({ cars: newIds.join(',') })
+    } else {
+      setSearchParams({})
     }
   }
 
-  const selectedCarData = cars.filter(car => selectedCars.includes(car.id))
+  const handleClearAll = () => {
+    setCars([])
+    setSearchParams({})
+  }
+
+  // Dynamic extra specifications across compared cars
+  const extraSpecKeys = useMemo(() => {
+    const knownKeys = new Set([
+      'length', 'width', 'height', 'wheelbase', 'ground clearance',
+      'boot space', 'battery capacity',
+    ])
+    const keys = new Set()
+    cars.forEach((car) => {
+      Object.keys(car.specifications || {}).forEach((key) => {
+        if (!knownKeys.has(key.toLowerCase())) {
+          keys.add(key)
+        }
+      })
+    })
+    return Array.from(keys).sort()
+  }, [cars])
+
+  // Helper to check if a row differs across compared cars
+  const checkRowDiffers = (getValueFn) => {
+    if (cars.length < 2) return false
+    const values = cars.map((c) => getValueFn(c) ?? '—')
+    return new Set(values).size > 1
+  }
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Compare Vehicles</h1>
-        <p className="text-zinc-400">Side-by-side comparison to make informed decisions</p>
-      </div>
-
-      {/* Car Selection */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-8">
-        <h3 className="text-xl font-bold mb-4">Select Vehicles to Compare</h3>
-        <p className="text-zinc-400 mb-6">Choose 2-4 vehicles to compare side by side</p>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {cars.map((car) => {
-            const isSelected = selectedCars.includes(car.id)
-            return (
-              <div 
-                key={car.id}
-                onClick={() => handleSelectCar(car.id)}
-                className={`border-2 rounded-xl p-4 cursor-pointer transition-all ${
-                  isSelected 
-                    ? 'border-red-500 bg-red-500 bg-opacity-10' 
-                    : 'border-zinc-800 hover:border-zinc-700'
-                }`}
-              >
-                <div className={`h-32 bg-gradient-to-r ${car.imageColor} rounded-lg mb-4 flex items-center justify-center`}>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-white opacity-90">{car.make.charAt(0)}</div>
-                    <div className="text-white font-medium">{car.make}</div>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-bold">{car.make} {car.model}</h4>
-                    <p className="text-sm text-zinc-400">{car.year}</p>
-                  </div>
-                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                    isSelected 
-                      ? 'border-red-500 bg-red-500' 
-                      : 'border-zinc-600'
-                  }`}>
-                    {isSelected && (
-                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )
-          })}
+    <main className="mx-auto max-w-7xl px-2 sm:px-4">
+      {/* Header */}
+      <header className="mb-6 flex flex-wrap items-end justify-between gap-4 border-b border-zinc-800 pb-6">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="rounded bg-red-950 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-red-400 border border-red-800/60">
+              SpeedHype Duel
+            </span>
+          </div>
+          <h1 className="mt-2 text-3xl font-black sm:text-4xl">Car Specification Comparison</h1>
+          <p className="mt-1 text-sm text-zinc-400">
+            Compare India-market vehicles head-to-head. Zero guessed numbers; genuinely missing figures stay unstated.
+          </p>
         </div>
 
-        <div className="flex items-center justify-between mt-6 pt-6 border-t border-zinc-800">
-          <div className="text-zinc-400">
-            Selected: <span className="text-white font-medium">{selectedCars.length}</span> of 4 vehicles
-          </div>
-          <div className="flex space-x-4">
-            <button 
-              onClick={() => setSelectedCars([])}
-              className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg text-white font-medium"
+        <div className="flex flex-wrap items-center gap-3">
+          {cars.length >= 2 && (
+            <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-xs font-semibold text-zinc-200 transition hover:bg-zinc-800">
+              <input
+                type="checkbox"
+                checked={highlightDifferences}
+                onChange={(e) => setHighlightDifferences(e.target.checked)}
+                className="rounded border-zinc-700 text-red-600 focus:ring-0"
+              />
+              Highlight Differences
+            </label>
+          )}
+
+          {cars.length < 4 && (
+            <button
+              type="button"
+              onClick={() => openVehicleSelector(cars.length)}
+              className="rounded-xl bg-red-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-red-500 shadow-sm"
+            >
+              + Add Vehicle ({cars.length}/4)
+            </button>
+          )}
+
+          {cars.length > 0 && (
+            <button
+              type="button"
+              onClick={handleClearAll}
+              className="rounded-xl border border-zinc-800 px-3 py-2 text-xs font-semibold text-zinc-400 hover:bg-zinc-900 hover:text-white"
             >
               Clear All
             </button>
-            <button className="px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 rounded-lg text-white font-medium">
-              Update Comparison
-            </button>
-          </div>
+          )}
         </div>
-      </div>
+      </header>
 
-      {/* Comparison Table */}
-      {selectedCarData.length >= 2 && (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr>
-                <th className="bg-zinc-900 border border-zinc-800 p-4 text-left sticky left-0 z-10 min-w-[200px]">
-                  <div className="font-bold text-lg">Specifications</div>
-                </th>
-                {selectedCarData.map((car) => (
-                  <th key={car.id} className="bg-zinc-900 border border-zinc-800 p-4 min-w-[250px]">
-                    <div className={`h-24 bg-gradient-to-r ${car.imageColor} rounded-lg mb-4 flex items-center justify-center`}>
-                      <div className="text-center">
-                        <div className="text-3xl font-bold text-white opacity-90">{car.make.charAt(0)}</div>
-                        <div className="text-white font-medium">{car.make}</div>
+      {error && (
+        <div role="alert" className="mb-6 rounded-2xl border border-red-900 bg-red-950/40 p-4 text-sm text-red-200">
+          {error}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[1, 2].map((n) => (
+            <div key={n} className="h-96 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900" />
+          ))}
+        </div>
+      ) : cars.length === 0 ? (
+        <div className="my-12 rounded-3xl border border-dashed border-zinc-800 bg-zinc-900/40 p-12 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-zinc-800 text-2xl">
+            ⚖️
+          </div>
+          <h2 className="mt-4 text-2xl font-black">No vehicles selected for comparison</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm text-zinc-400">
+            Pick 2 to 4 cars from the live catalogue to view complete side-by-side technical specs, dimensions, and pricing differences.
+          </p>
+          <button
+            type="button"
+            onClick={() => openVehicleSelector(0)}
+            className="mt-6 rounded-xl bg-red-600 px-6 py-3 text-sm font-bold text-white hover:bg-red-500 transition"
+          >
+            + Choose First Vehicle
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-8">
+          {/* Top Vehicle Cards Row */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {cars.map((car, index) => (
+              <div
+                key={car._id}
+                className="relative flex flex-col justify-between overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 p-4 transition hover:border-zinc-700"
+              >
+                {/* Remove button */}
+                <button
+                  type="button"
+                  title="Remove from comparison"
+                  onClick={() => handleRemoveCar(index)}
+                  className="absolute right-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-xs text-zinc-300 backdrop-blur hover:bg-red-900 hover:text-white"
+                >
+                  ✕
+                </button>
+
+                <div>
+                  {/* Photo or Monogram */}
+                  <div className="relative mb-3 overflow-hidden rounded-xl bg-zinc-950">
+                    {car.images?.[0]?.url ? (
+                      <img
+                        src={car.images[0].url}
+                        alt={car.images[0].alt || `${car.brand} ${car.model}`}
+                        referrerPolicy="no-referrer"
+                        className="aspect-video w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex aspect-video items-center justify-center bg-gradient-to-br from-red-950/40 via-zinc-900 to-zinc-950 text-4xl font-black italic text-white/10">
+                        {car.brand.charAt(0)}
                       </div>
-                    </div>
-                    <div className="text-center">
-                      <h4 className="text-xl font-bold">{car.make} {car.model}</h4>
-                      <p className="text-zinc-400">{car.year}</p>
-                      <div className="mt-2 text-2xl font-bold">{car.specs.price}</div>
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {specificationCategories.map((category, index) => (
-                <tr key={category.key} className={index % 2 === 0 ? 'bg-zinc-900' : 'bg-zinc-950'}>
-                  <td className="border border-zinc-800 p-4 font-medium sticky left-0 z-10 bg-inherit">
-                    {category.label}
-                  </td>
-                  {selectedCarData.map((car) => (
-                    <td key={`${car.id}-${category.key}`} className="border border-zinc-800 p-4 text-center">
-                      {car.specs[category.key]}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-              
-              {/* Pros */}
-              <tr className="bg-zinc-900">
-                <td className="border border-zinc-800 p-4 font-medium sticky left-0 z-10 bg-inherit">
-                  Pros
-                </td>
-                {selectedCarData.map((car) => (
-                  <td key={`${car.id}-pros`} className="border border-zinc-800 p-4">
-                    <ul className="space-y-2">
-                      {car.pros.map((pro, index) => (
-                        <li key={index} className="flex items-start">
-                          <svg className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                          </svg>
-                          <span>{pro}</span>
-                        </li>
+                    )}
+                    <span className="absolute bottom-2 left-2 rounded-md bg-black/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-400 backdrop-blur">
+                      {car.category || 'Vehicle'}
+                    </span>
+                  </div>
+
+                  <p className="text-xs font-semibold text-zinc-400">{car.brand} · {car.launchYear}</p>
+                  <h3 className="text-lg font-black text-white">{car.model}</h3>
+                  <p className="text-xs text-zinc-400 truncate">{car.variant || 'Base model'}</p>
+
+                  <div className="mt-3">
+                    <span className="text-xs text-zinc-500 block">Ex-Showroom Price</span>
+                    <span className="text-xl font-black text-emerald-400">
+                      {formatPrice(car.priceAmount, car.priceCurrency)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center gap-2 border-t border-zinc-800/80 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => openVehicleSelector(index)}
+                    className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800/60 py-1.5 text-xs font-semibold text-zinc-300 hover:bg-zinc-700 hover:text-white transition"
+                  >
+                    Change
+                  </button>
+                  <Link
+                    to={`/cars/catalog/${car._id}`}
+                    className="rounded-lg bg-red-600/20 px-3 py-1.5 text-xs font-bold text-red-300 hover:bg-red-600 hover:text-white transition"
+                  >
+                    Details →
+                  </Link>
+                </div>
+              </div>
+            ))}
+
+            {/* Empty slots up to 4 */}
+            {cars.length < 4 && (
+              <button
+                type="button"
+                onClick={() => openVehicleSelector(cars.length)}
+                className="flex min-h-[260px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-zinc-800 bg-zinc-950/30 p-6 text-zinc-500 transition hover:border-zinc-700 hover:text-zinc-300"
+              >
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-900 text-xl font-bold">
+                  +
+                </span>
+                <span className="mt-3 text-sm font-bold">Add Vehicle ({cars.length + 1} of 4)</span>
+                <span className="mt-1 text-xs text-zinc-600">Select another vehicle to compare</span>
+              </button>
+            )}
+          </div>
+
+          {/* Comparison Matrix Table */}
+          {cars.length >= 2 ? (
+            <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 shadow-xl">
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-zinc-800 bg-zinc-950/80">
+                      <th className="p-4 font-bold text-zinc-400 min-w-[200px]">Specification</th>
+                      {cars.map((car) => (
+                        <th key={car._id} className="p-4 font-black text-white min-w-[220px]">
+                          {car.brand} {car.model}
+                          <span className="block text-xs font-normal text-zinc-400">{car.variant}</span>
+                        </th>
                       ))}
-                    </ul>
-                  </td>
-                ))}
-              </tr>
-              
-              {/* Cons */}
-              <tr className="bg-zinc-950">
-                <td className="border border-zinc-800 p-4 font-medium sticky left-0 z-10 bg-inherit">
-                  Cons
-                </td>
-                {selectedCarData.map((car) => (
-                  <td key={`${car.id}-cons`} className="border border-zinc-800 p-4">
-                    <ul className="space-y-2">
-                      {car.cons.map((con, index) => (
-                        <li key={index} className="flex items-start">
-                          <svg className="w-5 h-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                          <span>{con}</span>
-                        </li>
+                    </tr>
+                  </thead>
+
+                  <tbody className="divide-y divide-zinc-800">
+                    {/* Standard Specs by Section */}
+                    {['Key Details', 'Powertrain & Performance', 'Dimensions & Capacity'].map((sectionName) => {
+                      const sectionRows = standardSpecRows.filter((r) => r.section === sectionName)
+                      return (
+                        <tr key={sectionName} className="contents">
+                          <tr className="bg-zinc-950">
+                            <td
+                              colSpan={cars.length + 1}
+                              className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-red-400"
+                            >
+                              {sectionName}
+                            </td>
+                          </tr>
+
+                          {sectionRows.map((row) => {
+                            const isDifferent = checkRowDiffers(row.getVal)
+                            const highlightClass = highlightDifferences && isDifferent
+                              ? 'bg-amber-950/20'
+                              : ''
+
+                            return (
+                              <tr key={row.label} className={`transition hover:bg-zinc-800/40 ${highlightClass}`}>
+                                <td className="p-4 font-semibold text-zinc-300">
+                                  {row.label}
+                                  {highlightDifferences && isDifferent && (
+                                    <span className="ml-2 inline-block h-1.5 w-1.5 rounded-full bg-amber-400" title="Differs" />
+                                  )}
+                                </td>
+                                {cars.map((car) => {
+                                  const val = row.getVal(car)
+                                  return (
+                                    <td key={car._id} className="p-4">
+                                      {val != null && val !== '' ? (
+                                        <span className="font-medium text-white">{val}</span>
+                                      ) : (
+                                        <span className="text-zinc-600 italic">Not stated</span>
+                                      )}
+                                    </td>
+                                  )
+                                })}
+                              </tr>
+                            )
+                          })}
+                        </tr>
+                      )
+                    })}
+
+                    {/* Additional Sourced Specifications */}
+                    {extraSpecKeys.length > 0 && (
+                      <>
+                        <tr className="bg-zinc-950">
+                          <td
+                            colSpan={cars.length + 1}
+                            className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-red-400"
+                          >
+                            Additional Sourced Specifications
+                          </td>
+                        </tr>
+
+                        {extraSpecKeys.map((specKey) => {
+                          const getSpecVal = (car) => car.specifications?.[specKey] || null
+                          const isDifferent = checkRowDiffers(getSpecVal)
+                          const highlightClass = highlightDifferences && isDifferent ? 'bg-amber-950/20' : ''
+
+                          return (
+                            <tr key={specKey} className={`transition hover:bg-zinc-800/40 ${highlightClass}`}>
+                              <td className="p-4 font-semibold text-zinc-300">
+                                {specKey}
+                                {highlightDifferences && isDifferent && (
+                                  <span className="ml-2 inline-block h-1.5 w-1.5 rounded-full bg-amber-400" title="Differs" />
+                                )}
+                              </td>
+                              {cars.map((car) => {
+                                const val = getSpecVal(car)
+                                return (
+                                  <td key={car._id} className="p-4">
+                                    {val != null && val !== '' ? (
+                                      <span className="font-medium text-white">{val}</span>
+                                    ) : (
+                                      <span className="text-zinc-600 italic">Not stated</span>
+                                    )}
+                                  </td>
+                                )
+                              })}
+                            </tr>
+                          )
+                        })}
+                      </>
+                    )}
+
+                    {/* Source Attribution Section */}
+                    <tr className="bg-zinc-950">
+                      <td
+                        colSpan={cars.length + 1}
+                        className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-red-400"
+                      >
+                        Verification &amp; Source Attribution
+                      </td>
+                    </tr>
+                    <tr className="hover:bg-zinc-800/40">
+                      <td className="p-4 font-semibold text-zinc-300">Official Source</td>
+                      {cars.map((car) => (
+                        <td key={car._id} className="p-4 text-xs">
+                          <p className="font-bold text-white">{car.sourceName || 'Manufacturer Press'}</p>
+                          {car.sourceTitle && <p className="mt-0.5 text-zinc-400">{car.sourceTitle}</p>}
+                          {car.sourceUrl && (
+                            <a
+                              href={car.sourceUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="mt-1.5 inline-block text-red-400 underline hover:text-red-300 break-all"
+                            >
+                              View source document ↗
+                            </a>
+                          )}
+                        </td>
                       ))}
-                    </ul>
-                  </td>
-                ))}
-              </tr>
-            </tbody>
-          </table>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 text-center">
+              <p className="text-zinc-400">Add at least one more vehicle above to generate the side-by-side comparison matrix.</p>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Summary */}
-      {selectedCarData.length >= 2 && (
-        <div className="mt-8 bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-          <h3 className="text-2xl font-bold mb-4">Comparison Summary</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center p-6 bg-zinc-800 rounded-xl">
-              <div className="text-3xl font-bold mb-2">Best Performance</div>
-              <div className="text-lg font-medium mb-2">Tesla Model 3 Performance</div>
-              <div className="text-zinc-400">0-60 mph in 3.1 seconds</div>
+      {/* Vehicle Selector Modal */}
+      {selectorOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/80 p-4 backdrop-blur-sm">
+          <div className="relative my-8 flex max-h-[85vh] w-full max-w-2xl flex-col rounded-2xl border border-zinc-800 bg-zinc-900 shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-zinc-800 px-6 py-4">
+              <div>
+                <h3 className="text-lg font-bold text-white">Select Vehicle to Compare</h3>
+                <p className="text-xs text-zinc-400">Search published vehicles in the SpeedHype catalog.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectorOpen(false)}
+                className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+              >
+                ✕
+              </button>
             </div>
-            <div className="text-center p-6 bg-zinc-800 rounded-xl">
-              <div className="text-3xl font-bold mb-2">Best Value</div>
-              <div className="text-lg font-medium mb-2">Ford Mustang GT</div>
-              <div className="text-zinc-400">$42,000 for 480 hp V8</div>
+
+            {/* Search input */}
+            <div className="border-b border-zinc-800 bg-zinc-950/60 p-4">
+              <input
+                type="text"
+                autoFocus
+                value={selectorSearch}
+                onChange={handleSelectorSearchChange}
+                placeholder="Search by brand or model (e.g. Tata Nexon, Creta, Swift)..."
+                className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm text-white outline-none focus:border-red-500"
+              />
             </div>
-            <div className="text-center p-6 bg-zinc-800 rounded-xl">
-              <div className="text-3xl font-bold mb-2">Best Handling</div>
-              <div className="text-lg font-medium mb-2">Porsche 911 Carrera</div>
-              <div className="text-zinc-400">Precision and balance</div>
+
+            {/* Vehicle List */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              {searchingCatalog ? (
+                <div className="py-12 text-center text-sm text-zinc-500">Searching catalogue...</div>
+              ) : catalogCars.length === 0 ? (
+                <div className="py-12 text-center text-sm text-zinc-500">
+                  No vehicles found matching &quot;{selectorSearch}&quot;.
+                </div>
+              ) : (
+                catalogCars.map((car) => {
+                  const alreadySelected = cars.some((c) => c._id === car._id)
+                  return (
+                    <button
+                      key={car._id}
+                      type="button"
+                      disabled={alreadySelected}
+                      onClick={() => handleSelectCarForSlot(car)}
+                      className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition ${
+                        alreadySelected
+                          ? 'border-zinc-800 bg-zinc-950/40 opacity-50 cursor-not-allowed'
+                          : 'border-zinc-800 bg-zinc-950 hover:border-zinc-600 hover:bg-zinc-800/60'
+                      }`}
+                    >
+                      {car.images?.[0]?.url ? (
+                        <img
+                          src={car.images[0].url}
+                          alt={car.model}
+                          referrerPolicy="no-referrer"
+                          className="h-14 w-20 rounded-lg object-cover bg-zinc-900"
+                        />
+                      ) : (
+                        <div className="flex h-14 w-20 items-center justify-center rounded-lg bg-zinc-900 font-black text-zinc-700">
+                          {car.brand.charAt(0)}
+                        </div>
+                      )}
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-white">{car.brand} {car.model}</span>
+                          <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] uppercase text-zinc-400">
+                            {car.launchYear}
+                          </span>
+                        </div>
+                        <p className="text-xs text-zinc-400 truncate">{car.variant || 'Standard'}</p>
+                        <p className="text-xs font-semibold text-emerald-400 mt-1">
+                          {formatPrice(car.priceAmount, car.priceCurrency)}
+                        </p>
+                      </div>
+
+                      <div className="text-right text-xs">
+                        {alreadySelected ? (
+                          <span className="text-zinc-500">Selected</span>
+                        ) : (
+                          <span className="rounded-lg bg-red-600 px-3 py-1 font-bold text-white">
+                            Select
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  )
+                })
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="border-t border-zinc-800 bg-zinc-950/80 px-6 py-3 text-right">
+              <button
+                type="button"
+                onClick={() => setSelectorOpen(false)}
+                className="rounded-xl border border-zinc-700 px-4 py-2 text-xs font-semibold text-zinc-300 hover:bg-zinc-800"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
       )}
-
-      {/* Comparison Tips */}
-      <div className="mt-8 bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-        <h3 className="text-xl font-bold mb-4">Comparison Tips</h3>
-        <div className="grid grid-cols-1 md:grid-c-2 lg:grid-cols-3 gap-6">
-          <div className="p-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-red-600 to-orange-600 rounded-lg flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h4 className="font-bold mb-2">Consider Your Needs</h4>
-            <p className="text-zinc-400">Think about daily use, passenger needs, cargo space, and intended driving style.</p>
-          </div>
-          <div className="p-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h4 className="font-bold mb-2">Total Cost of Ownership</h4>
-            <p className="text-zinc-400">Factor in insurance, maintenance, fuel, and depreciation, not just purchase price.</p>
-          </div>
-          <div className="p-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h4 className="font-bold mb-2">Test Drive is Essential</h4>
-            <p className="text-zinc-400">Specs tell part of the story. Always test drive to feel handling, comfort, and ergonomics.</p>
-          </div>
-        </div>
-      </div>
-    </div>
+    </main>
   )
 }
-
-export default ComparePage

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useAuth, UserButton } from '@clerk/react'
 import { Link } from 'react-router-dom'
 import { authenticatedRequest } from '../services/api'
+import speedhypeLogo from '../assets/speedhype logo.png'
 
 const notificationLink = (item) => item.href || '/feed'
 const notificationLabel = (type) => (
@@ -58,9 +59,12 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-red-600 rounded-full"></div>
-              <span className="text-white font-bold text-xl">SpeedHype</span>
+            <Link to="/" className="flex items-center gap-2 group">
+              <img
+                src={speedhypeLogo}
+                alt="SpeedHype"
+                className="h-12 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
+              />
             </Link>
           </div>
 

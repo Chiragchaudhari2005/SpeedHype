@@ -15,6 +15,8 @@ import BlogsPage from './pages/BlogsPage'
 import BlogDetailsPage from './pages/BlogDetailsPage'
 import BlogEditorPage from './pages/BlogEditorPage'
 import CarsPage from './pages/CarsPage'
+import CarDetailsPage from './pages/CarDetailsPage'
+import AdminCarsPage from './pages/AdminCarsPage'
 import VehicleEditorPage from './pages/VehicleEditorPage'
 import ComparePage from './pages/ComparePage'
 import NotFoundPage from './pages/NotFoundPage'
@@ -127,6 +129,20 @@ function App() {
         <ProtectedRoute>
           <MainLayout>
             <CarsPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/cars/catalog/:carId" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <CarDetailsPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/cars" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <AdminCarsPage />
           </MainLayout>
         </ProtectedRoute>
       } />

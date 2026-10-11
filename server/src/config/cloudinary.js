@@ -16,6 +16,33 @@ const configureCloudinary = () => {
   });
 };
 
+export const isCloudinaryConfigured = () => {
+  const { CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET } = process.env;
+  return Boolean(CLOUDINARY_CLOUD_NAME && CLOUDINARY_API_KEY && CLOUDINARY_API_SECRET);
+};
+
+export const uploadCarImage = (file) => {
+  configureCloudinary();
+
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: 'speedhype/cars', resource_type: 'image' },
+      (error, result) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        if (!result?.secure_url || !result.public_id) {
+          reject(new Error('Cloudinary did not return an image URL.'));
+          return;
+        }
+        resolve({ url: result.secure_url, publicId: result.public_id });
+      },
+    );
+    stream.end(file.buffer);
+  });
+};
+
 export const uploadBlogImage = (file) => {
   configureCloudinary();
 

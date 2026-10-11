@@ -1,5 +1,14 @@
 # Dependencies
 **/node_modules/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+ai-services/.env
+server/.env
+client/.env*
+!**/.env.example
 
 # Build output and coverage
 **/dist/

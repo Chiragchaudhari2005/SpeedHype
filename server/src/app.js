@@ -7,6 +7,7 @@ import blogRoutes from "./routes/blogRoutes.js";
 import communityRoutes from "./routes/communityRoutes.js";
 import feedRoutes from "./routes/feedRoutes.js";
 import vehicleRoutes from "./routes/vehicleRoutes.js";
+import carCatalogRoutes from "./routes/carCatalogRoutes.js";
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use("/api/blogs", clerkAuthMiddleware, blogRoutes);
 app.use("/api/communities", clerkAuthMiddleware, communityRoutes);
 app.use("/api/feed", clerkAuthMiddleware, feedRoutes);
 app.use("/api/cars", clerkAuthMiddleware, vehicleRoutes);
+app.use("/api/car-catalog", clerkAuthMiddleware, carCatalogRoutes);
 
 app.use((error, _req, res, _next) => {
   console.error("API request failed:", error.message);
