@@ -126,21 +126,26 @@ const BlogsPage = () => {
   ), [blogs])
   return (
     <div className="mx-auto max-w-7xl">
-      <section className="relative mb-9 overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900 px-6 py-9 sm:px-10 sm:py-12">
+      <section className="relative mb-8 overflow-hidden rounded-2xl sm:rounded-3xl border border-zinc-800/80 bg-gradient-to-r from-zinc-900 via-zinc-900 to-red-950/30 p-5 sm:p-8">
         <div className="pointer-events-none absolute -right-12 -top-28 h-80 w-80 rounded-full bg-red-600/15 blur-3xl" />
-        <div className="relative flex flex-col justify-between gap-7 md:flex-row md:items-end">
+        <div className="relative flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div className="max-w-2xl">
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.28em] text-red-400">The SpeedHype journal</p>
-            <h1 className="text-4xl font-black tracking-tight sm:text-5xl">Stories built for the <span className="text-red-500">drive.</span></h1>
-            <p className="mt-4 max-w-xl leading-7 text-zinc-400">
-              Real builds, sharp opinions, and deep dives from people who live and breathe cars.
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-red-900/60 bg-red-950/50 text-[11px] font-bold uppercase tracking-wider text-red-400 mb-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+              The SpeedHype Journal
+            </div>
+            <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white">
+              Stories Built for the <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">Drive.</span>
+            </h1>
+            <p className="mt-2 max-w-xl text-sm sm:text-base leading-relaxed text-zinc-400">
+              Real garage builds, track day reports, sharp technical analyses, and culture deep-dives.
             </p>
           </div>
           <Link
             to="/blogs/new"
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-orange-600 px-5 py-3 font-bold text-white shadow-lg shadow-red-950/40 transition hover:brightness-110"
+            className="self-start md:self-auto inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-orange-600 px-5 py-3 text-xs sm:text-sm font-bold text-white shadow-lg shadow-red-950/40 transition-transform hover:scale-[1.02] hover:brightness-110"
           >
-            <span className="text-xl leading-none">+</span> Write a story
+            <span className="text-lg leading-none">+</span> Write a story
           </Link>
         </div>
       </section>
@@ -148,12 +153,12 @@ const BlogsPage = () => {
       <section className="mb-8 grid gap-3 sm:grid-cols-[minmax(0,1fr)_220px_170px]">
         <label className="relative">
           <span className="sr-only">Search stories</span>
-          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500">⌕</span>
+          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">⌕</span>
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search stories, tags, or authors"
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-900 py-3 pl-11 pr-4 text-white outline-none placeholder:text-zinc-500 focus:border-red-500"
+            placeholder="Search stories, tags, or authors…"
+            className="w-full rounded-xl border border-zinc-700/80 bg-zinc-950/80 py-2.5 sm:py-3 pl-10 pr-4 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-red-500 transition-all"
           />
         </label>
         <label>
@@ -161,7 +166,7 @@ const BlogsPage = () => {
           <select
             value={category}
             onChange={(event) => setCategory(event.target.value)}
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-white outline-none focus:border-red-500"
+            className="w-full rounded-xl border border-zinc-700/80 bg-zinc-950/80 px-3 sm:px-4 py-2.5 sm:py-3 text-sm text-white outline-none focus:border-red-500 transition-all"
           >
             <option value="all">All categories</option>
             {categories.map((item) => <option key={item} value={item}>{item}</option>)}
@@ -172,7 +177,7 @@ const BlogsPage = () => {
           <select
             value={sort}
             onChange={(event) => setSort(event.target.value)}
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-white outline-none focus:border-red-500"
+            className="w-full rounded-xl border border-zinc-700/80 bg-zinc-950/80 px-3 sm:px-4 py-2.5 sm:py-3 text-sm text-white outline-none focus:border-red-500 transition-all"
           >
             <option value="latest">Latest first</option>
             <option value="oldest">Oldest first</option>

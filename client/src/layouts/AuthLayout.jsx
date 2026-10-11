@@ -1,27 +1,30 @@
 import { Link } from 'react-router-dom'
+import speedhypeLogo from '../assets/speedhype logo.png'
 
 const AuthLayout = ({ children, title, subtitle }) => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-zinc-900 flex flex-col items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col items-center justify-center px-4 py-10 selection:bg-red-600 selection:text-white">
+      {/* Top Precision Accent Line */}
+      <div className="fixed top-0 inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-red-600 to-transparent opacity-80" />
+
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center space-x-2">
-            <div className="w-10 h-10 bg-gradient-to-r from-red-600 to-orange-600 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <span className="text-white font-bold text-2xl">SpeedHype</span>
+        <div className="text-center mb-6">
+          <Link to="/" className="inline-block transition-transform hover:scale-105">
+            <img
+              src={speedhypeLogo}
+              alt="SpeedHype"
+              className="h-12 w-auto mx-auto object-contain"
+            />
           </Link>
-          <h1 className="mt-6 text-3xl font-bold text-white">{title}</h1>
+          <h1 className="mt-4 text-2xl sm:text-3xl font-black text-white">{title}</h1>
           {subtitle && (
-            <p className="mt-2 text-zinc-400">{subtitle}</p>
+            <p className="mt-1.5 text-xs sm:text-sm text-zinc-400">{subtitle}</p>
           )}
         </div>
 
-        {/* Auth Content */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 shadow-xl">
+        {/* Auth Content Card */}
+        <div className="bg-zinc-900/90 border border-zinc-800/80 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-sm">
           {children}
         </div>
 

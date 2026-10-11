@@ -4,45 +4,29 @@ const NotFoundPage = () => {
   return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center text-center">
       {/* Error Code */}
-      <div className="relative mb-8">
-        <div className="text-9xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
+      <div className="relative mb-6">
+        <div className="font-mono text-8xl sm:text-9xl font-black bg-gradient-to-r from-red-500 via-orange-500 to-amber-500 bg-clip-text text-transparent">
           404
         </div>
-        <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-r from-red-600 to-orange-600 rounded-full opacity-20 blur-xl"></div>
-        <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full opacity-20 blur-xl"></div>
+        <div className="pointer-events-none absolute -top-4 -right-4 w-28 h-28 bg-red-600/20 rounded-full blur-2xl"></div>
       </div>
 
       {/* Message */}
-      <h1 className="text-4xl font-bold mb-4">Page Not Found</h1>
-      <p className="text-xl text-zinc-400 mb-8 max-w-2xl">
-        The page you're looking for doesn't exist or has been moved. 
-        Don't worry, you can navigate back to safety.
+      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-red-900/60 bg-red-950/50 text-[11px] font-bold uppercase tracking-wider text-red-400 mb-3">
+        Pit Lane Detour
+      </div>
+      <h1 className="text-3xl sm:text-4xl font-black text-white mb-3">You&apos;ve Drifted Off Track</h1>
+      <p className="text-sm sm:text-base text-zinc-400 mb-8 max-w-lg leading-relaxed">
+        The apex you were looking for doesn&apos;t exist or has moved to a new paddock. Return to the track below.
       </p>
 
-      {/* Illustration */}
-      <div className="relative w-64 h-64 mb-8">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-48 h-48 border-4 border-dashed border-zinc-800 rounded-full animate-pulse"></div>
-        </div>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-32 h-32 border-4 border-dashed border-zinc-700 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
-        </div>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-16 h-16 bg-gradient-to-r from-red-600 to-orange-600 rounded-full flex items-center justify-center">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-          </div>
-        </div>
-      </div>
-
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm justify-center">
         <Link 
           to="/" 
-          className="inline-flex items-center justify-center bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-all transform hover:scale-105"
+          className="inline-flex items-center justify-center bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-bold py-3 px-6 rounded-xl text-sm shadow-lg shadow-red-950/50 transition-all hover:scale-[1.02]"
         >
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
           Back to Home
@@ -50,9 +34,9 @@ const NotFoundPage = () => {
         
         <Link 
           to="/dashboard" 
-          className="inline-flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-all"
+          className="inline-flex items-center justify-center bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-white font-bold py-3 px-6 rounded-xl text-sm transition-colors"
         >
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
           Go to Dashboard

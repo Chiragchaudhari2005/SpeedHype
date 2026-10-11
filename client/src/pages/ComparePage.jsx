@@ -342,31 +342,33 @@ export default function ComparePage() {
 
           {/* Comparison Matrix Table */}
           {cars.length >= 2 ? (
-            <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 shadow-xl">
+            <div className="overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/90 shadow-2xl">
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-left text-sm">
+                <table className="w-full border-collapse text-left text-xs sm:text-sm">
                   <thead>
-                    <tr className="border-b border-zinc-800 bg-zinc-950/80">
-                      <th className="p-4 font-bold text-zinc-400 min-w-[200px]">Specification</th>
+                    <tr className="border-b border-zinc-800 bg-zinc-950">
+                      <th className="p-3.5 sm:p-4 font-bold text-zinc-400 min-w-[150px] sm:min-w-[200px] sticky left-0 bg-zinc-950 z-20 shadow-[2px_0_4px_rgba(0,0,0,0.5)]">
+                        Specification
+                      </th>
                       {cars.map((car) => (
-                        <th key={car._id} className="p-4 font-black text-white min-w-[220px]">
+                        <th key={car._id} className="p-3.5 sm:p-4 font-black text-white min-w-[180px] sm:min-w-[220px]">
                           {car.brand} {car.model}
-                          <span className="block text-xs font-normal text-zinc-400">{car.variant}</span>
+                          <span className="block text-xs font-normal text-zinc-400 truncate">{car.variant || 'Base model'}</span>
                         </th>
                       ))}
                     </tr>
                   </thead>
 
-                  <tbody className="divide-y divide-zinc-800">
+                  <tbody className="divide-y divide-zinc-800/60">
                     {/* Standard Specs by Section */}
                     {['Key Details', 'Powertrain & Performance', 'Dimensions & Capacity'].map((sectionName) => {
                       const sectionRows = standardSpecRows.filter((r) => r.section === sectionName)
                       return (
                         <tr key={sectionName} className="contents">
-                          <tr className="bg-zinc-950">
+                          <tr className="bg-zinc-950/90 border-y border-zinc-800/80">
                             <td
                               colSpan={cars.length + 1}
-                              className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-red-400"
+                              className="px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-red-400 sticky left-0 bg-zinc-950/90"
                             >
                               {sectionName}
                             </td>
@@ -375,23 +377,23 @@ export default function ComparePage() {
                           {sectionRows.map((row) => {
                             const isDifferent = checkRowDiffers(row.getVal)
                             const highlightClass = highlightDifferences && isDifferent
-                              ? 'bg-amber-950/20'
+                              ? 'bg-amber-950/30'
                               : ''
 
                             return (
                               <tr key={row.label} className={`transition hover:bg-zinc-800/40 ${highlightClass}`}>
-                                <td className="p-4 font-semibold text-zinc-300">
+                                <td className="p-3.5 sm:p-4 font-semibold text-zinc-300 sticky left-0 bg-zinc-950/95 z-10 shadow-[2px_0_4px_rgba(0,0,0,0.5)]">
                                   {row.label}
                                   {highlightDifferences && isDifferent && (
-                                    <span className="ml-2 inline-block h-1.5 w-1.5 rounded-full bg-amber-400" title="Differs" />
+                                    <span className="ml-2 inline-block h-1.5 w-1.5 rounded-full bg-amber-400" title="Differs between vehicles" />
                                   )}
                                 </td>
                                 {cars.map((car) => {
                                   const val = row.getVal(car)
                                   return (
-                                    <td key={car._id} className="p-4">
+                                    <td key={car._id} className="p-3.5 sm:p-4">
                                       {val != null && val !== '' ? (
-                                        <span className="font-medium text-white">{val}</span>
+                                        <span className="font-mono font-medium text-white">{val}</span>
                                       ) : (
                                         <span className="text-zinc-600 italic">Not stated</span>
                                       )}
@@ -408,10 +410,10 @@ export default function ComparePage() {
                     {/* Additional Sourced Specifications */}
                     {extraSpecKeys.length > 0 && (
                       <>
-                        <tr className="bg-zinc-950">
+                        <tr className="bg-zinc-950/90 border-y border-zinc-800/80">
                           <td
                             colSpan={cars.length + 1}
-                            className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-red-400"
+                            className="px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-red-400 sticky left-0 bg-zinc-950/90"
                           >
                             Additional Sourced Specifications
                           </td>
@@ -420,22 +422,22 @@ export default function ComparePage() {
                         {extraSpecKeys.map((specKey) => {
                           const getSpecVal = (car) => car.specifications?.[specKey] || null
                           const isDifferent = checkRowDiffers(getSpecVal)
-                          const highlightClass = highlightDifferences && isDifferent ? 'bg-amber-950/20' : ''
+                          const highlightClass = highlightDifferences && isDifferent ? 'bg-amber-950/30' : ''
 
                           return (
                             <tr key={specKey} className={`transition hover:bg-zinc-800/40 ${highlightClass}`}>
-                              <td className="p-4 font-semibold text-zinc-300">
+                              <td className="p-3.5 sm:p-4 font-semibold text-zinc-300 sticky left-0 bg-zinc-950/95 z-10 shadow-[2px_0_4px_rgba(0,0,0,0.5)]">
                                 {specKey}
                                 {highlightDifferences && isDifferent && (
-                                  <span className="ml-2 inline-block h-1.5 w-1.5 rounded-full bg-amber-400" title="Differs" />
+                                  <span className="ml-2 inline-block h-1.5 w-1.5 rounded-full bg-amber-400" title="Differs between vehicles" />
                                 )}
                               </td>
                               {cars.map((car) => {
                                 const val = getSpecVal(car)
                                 return (
-                                  <td key={car._id} className="p-4">
+                                  <td key={car._id} className="p-3.5 sm:p-4">
                                     {val != null && val !== '' ? (
-                                      <span className="font-medium text-white">{val}</span>
+                                      <span className="font-mono font-medium text-white">{val}</span>
                                     ) : (
                                       <span className="text-zinc-600 italic">Not stated</span>
                                     )}
@@ -449,18 +451,20 @@ export default function ComparePage() {
                     )}
 
                     {/* Source Attribution Section */}
-                    <tr className="bg-zinc-950">
+                    <tr className="bg-zinc-950/90 border-y border-zinc-800/80">
                       <td
                         colSpan={cars.length + 1}
-                        className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-red-400"
+                        className="px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-red-400 sticky left-0 bg-zinc-950/90"
                       >
                         Verification &amp; Source Attribution
                       </td>
                     </tr>
                     <tr className="hover:bg-zinc-800/40">
-                      <td className="p-4 font-semibold text-zinc-300">Official Source</td>
+                      <td className="p-3.5 sm:p-4 font-semibold text-zinc-300 sticky left-0 bg-zinc-950/95 z-10 shadow-[2px_0_4px_rgba(0,0,0,0.5)]">
+                        Official Source
+                      </td>
                       {cars.map((car) => (
-                        <td key={car._id} className="p-4 text-xs">
+                        <td key={car._id} className="p-3.5 sm:p-4 text-xs">
                           <p className="font-bold text-white">{car.sourceName || 'Manufacturer Press'}</p>
                           {car.sourceTitle && <p className="mt-0.5 text-zinc-400">{car.sourceTitle}</p>}
                           {car.sourceUrl && (

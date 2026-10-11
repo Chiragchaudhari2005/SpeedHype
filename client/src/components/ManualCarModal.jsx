@@ -307,11 +307,11 @@ export default function ManualCarModal({
         </div>
 
         {/* Tab navigation */}
-        <div className="flex border-b border-zinc-800 bg-zinc-950/40 px-6">
+        <div className="flex overflow-x-auto whitespace-nowrap border-b border-zinc-800 bg-zinc-950/40 px-4 sm:px-6">
           <button
             type="button"
             onClick={() => setActiveTab('essential')}
-            className={`border-b-2 px-4 py-3 text-sm font-bold transition ${
+            className={`border-b-2 px-3 sm:px-4 py-3 text-xs sm:text-sm font-bold transition shrink-0 ${
               activeTab === 'essential'
                 ? 'border-red-500 text-white'
                 : 'border-transparent text-zinc-400 hover:text-zinc-200'
@@ -322,7 +322,7 @@ export default function ManualCarModal({
           <button
             type="button"
             onClick={() => setActiveTab('specs')}
-            className={`border-b-2 px-4 py-3 text-sm font-bold transition ${
+            className={`border-b-2 px-3 sm:px-4 py-3 text-xs sm:text-sm font-bold transition shrink-0 ${
               activeTab === 'specs'
                 ? 'border-red-500 text-white'
                 : 'border-transparent text-zinc-400 hover:text-zinc-200'
@@ -333,7 +333,7 @@ export default function ManualCarModal({
           <button
             type="button"
             onClick={() => setActiveTab('media')}
-            className={`border-b-2 px-4 py-3 text-sm font-bold transition ${
+            className={`border-b-2 px-3 sm:px-4 py-3 text-xs sm:text-sm font-bold transition shrink-0 ${
               activeTab === 'media'
                 ? 'border-red-500 text-white'
                 : 'border-transparent text-zinc-400 hover:text-zinc-200'
