@@ -1,12 +1,5 @@
 #  SpeedHype - All-in-one Automotive Community Platform
 
-[![React](https://img.shields.io/badge/React-19.2.8-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
-[![Express](https://img.shields.io/badge/Express-5.2.1-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-9.11-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
-[![Clerk](https://img.shields.io/badge/Clerk-Authentication-6C47FF?style=for-the-badge&logo=clerk&logoColor=white)](https://clerk.com/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4.3-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![LangGraph](https://img.shields.io/badge/LangGraph-Python_AI-FF6F00?style=for-the-badge&logo=python&logoColor=white)](https://langchain-ai.github.io/langgraph/)
-
 SpeedHype is a  automotive community and vehicle information web application built for petrolheads, automotive enthusiasts, and everyday car buyers. Combining the excitement of community social feeds, real-time chats, and verified Indian vehicle catalogs with an  side-by-side vehicle comparison.
 
 ---
