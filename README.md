@@ -1,392 +1,278 @@
-# SpeedHype - Automotive Community Platform
+#  SpeedHype - Automotive Community & Vehicle Intelligence Platform
 
-![SpeedHype](https://img.shields.io/badge/SpeedHype-Automotive%20Community-blue)
-![React](https://img.shields.io/badge/React-19.2.8-61DAFB)
-![Express](https://img.shields.io/badge/Express-5.0-000000)
-![MongoDB](https://img.shields.io/badge/MongoDB-7.0-47A248)
-![Clerk](https://img.shields.io/badge/Clerk-Authentication-6C47FF)
+[![SpeedHype Platform](https://img.shields.io/badge/SpeedHype-Automotive%20Platform-dc2626?style=for-the-badge&logo=speedtest&logoColor=white)](https://github.com/Chiragchaudhari2005/SpeedHype)
+[![React](https://img.shields.io/badge/React-19.2.8-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![Express](https://img.shields.io/badge/Express-5.2.1-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-9.11-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![Clerk](https://img.shields.io/badge/Clerk-Authentication-6C47FF?style=for-the-badge&logo=clerk&logoColor=white)](https://clerk.com/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4.3-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![LangGraph](https://img.shields.io/badge/LangGraph-Python_AI-FF6F00?style=for-the-badge&logo=python&logoColor=white)](https://langchain-ai.github.io/langgraph/)
 
-SpeedHype is a modern automotive community platform designed for car and bike enthusiasts to connect, share experiences, and discover content. This MERN stack application provides a premium automotive experience with Clerk authentication, responsive design, and a clean, dark automotive aesthetic.
-
-## 🏗️ Tech Stack
-
-### Frontend
-- **React 19** - Modern UI library with hooks
-- **Vite** - Next-generation build tool
-- **React Router 7** - Client-side routing
-- **Tailwind CSS 4** - Utility-first CSS framework
-- **Axios** - HTTP client for API requests
-- **Clerk React SDK** - Authentication and user management
-- **Socket.IO Client** - Authenticated live community chat
-- **Notifications** - Activity updates for blogs, communities, and vehicle launches
-
-### Backend
-- **Node.js** - JavaScript runtime
-- **Express 5** - Web application framework
-- **MongoDB** - NoSQL database
-- **Mongoose** - MongoDB object modeling
-- **Clerk Node SDK** - Backend authentication verification
-- **Socket.IO** - Real-time community chat transport
-- **Cloudinary** - Community covers and chat image/video uploads
-- **Activity feed** - Recent blogs, communities, vehicle launches, trending tags, and community suggestions
-- **Car catalog** - Searchable, filtered India-market vehicle records with source-attributed variants
-- **LangGraph ingestion worker** - Separate, scheduled source ingestion with robots-policy checks and evidence-grounded extraction
-
-### Authentication
-- **Clerk** - Complete authentication solution
-- **No custom JWT/bcrypt** - All auth handled by Clerk
-- **Protected routes** - Both frontend and backend
-
-## 📁 Project Structure
-
-```
-SpeedHype/
-├── client/                 # React frontend
-│   ├── src/
-│   │   ├── components/    # Reusable UI components
-│   │   ├── layouts/       # Page layouts
-│   │   ├── pages/         # Route pages
-│   │   ├── services/      # API client services
-│   │   └── ...
-│   ├── public/
-│   └── package.json
-├── server/                 # Express backend
-│   ├── src/
-│   │   ├── config/        # Database configuration
-│   │   ├── controllers/   # Route controllers
-│   │   ├── middleware/    # Auth & other middleware
-│   │   ├── models/        # MongoDB models
-│   │   ├── routes/        # API routes
-│   │   └── ...
-│   └── package.json
-├── docs/                  # Documentation
-└── README.md
-```
-
-## 🚀 Quick Start
-
-### Prerequisites
-- **Node.js** (v18 or higher)
-- **npm** (v9 or higher)
-- **MongoDB** (local or Atlas cluster)
-- **Clerk Account** ([sign up here](https://clerk.com))
-
-### 1. Clone and Install
-
-```bash
-# Clone the repository
-git clone <repository-url>
-cd SpeedHype
-
-# Install backend dependencies
-cd server
-npm install
-
-# Install frontend dependencies
-cd ../client
-npm install
-```
-
-### 2. Environment Configuration
-
-#### Frontend (.env.local in client/)
-```env
-VITE_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
-VITE_API_URL=http://localhost:5000/api
-```
-
-#### Backend (.env in server/)
-```env
-PORT=5000
-MONGO_URI=your_mongodb_connection_string
-CLERK_SECRET_KEY=your_clerk_secret_key
-CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
-CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
-CLOUDINARY_API_KEY=your_cloudinary_api_key
-CLOUDINARY_API_SECRET=your_cloudinary_api_secret
-CLIENT_ORIGIN=http://localhost:5173
-```
-
-Cloudinary is used for optional community covers and chat image/video attachments. Keep its API secret in the server environment only. Chat attachments are limited to 12 MB.
-
-### 3. Clerk Setup
-1. Create a Clerk application at [clerk.com](https://clerk.com)
-2. Copy your **Publishable Key** to `VITE_CLERK_PUBLISHABLE_KEY`
-3. Copy your **Secret Key** to `CLERK_SECRET_KEY`
-4. Configure redirect URLs in Clerk dashboard:
-   - `http://localhost:5173/sign-in`
-   - `http://localhost:5173/sign-up`
-
-### 4. Run the Application
-
-```bash
-# Terminal 1: Start backend
-cd server
-npm run dev
-
-# Terminal 2: Start frontend
-cd client
-npm run dev
-```
-
-The application will be available at:
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:5000
-- **API Health Check**: http://localhost:5000/api/health
-
-## 🔐 Authentication Architecture
-
-SpeedHype uses **Clerk** for complete authentication handling:
-
-### Frontend Authentication Flow
-1. User visits `/sign-in` or `/sign-up` pages
-2. Clerk handles the authentication UI
-3. Upon successful auth, Clerk manages session state
-4. `useUser()` hook provides user data
-5. `useAuth()` hook provides token access
-
-### Backend Authentication Flow
-1. Frontend includes Clerk token in `Authorization: Bearer <token>` header
-2. Backend middleware verifies token with Clerk API
-3. Verified user data is attached to `req.auth`
-4. Routes can access authenticated user information
-
-### API Client Service
-The `client/src/services/api.js` provides authentication helpers:
-
-```javascript
-import { useAuth } from '@clerk/react';
-import { createAuthenticatedRequest, authenticatedRequest } from './services/api';
-
-// Example 1: Create authenticated API instance
-const { getToken } = useAuth();
-const authApi = await createAuthenticatedRequest(getToken);
-const userData = await authApi.get('/auth/me');
-
-// Example 2: Make single authenticated request
-const result = await authenticatedRequest(getToken, 'GET', '/auth/me');
-
-// Example 3: Make authenticated POST request
-const postResult = await authenticatedRequest(
-  getToken, 
-  'POST', 
-  '/posts', 
-  { title: 'New Post' }
-);
-```
-
-## 📱 Application Features
-
-### Public Routes
-- `/` - Landing page with hero and feature cards
-- `/sign-in` - Clerk-powered sign in
-- `/sign-up` - Clerk-powered sign up
-- `/*` - 404 page for unknown routes
-
-### Protected Routes (Require Authentication)
-- `/dashboard` - User dashboard with welcome message
-- `/profile` - User profile using Clerk components
-- `/feed` - Recent stories, communities, vehicle launches, trending topics, and suggestions
-- `/notifications` - Recent SpeedHype activity and unread updates
-- `/communities` - Search, filter, join, and manage communities
-- `/communities/new` - Create an automotive community
-- `/communities/:communityId` - Community information, members, and real-time chat
-- `/communities/:communityId/edit` - Edit a community as its creator
-- `/blogs` - Automotive blogs
-- `/cars` - Searchable, paginated car-spec catalog
-- `/cars/catalog/:carId` - Vehicle specifications, variants, images, and source attribution
-- `/cars/new` - Add a vehicle launch to the SpeedHype database and activity feed
-- `/compare` - Vehicle comparison (placeholder)
-
-### UI Design
-- **Modern automotive aesthetic** - Dark theme with premium styling
-- **Responsive design** - Works on mobile, tablet, and desktop
-- **Tailwind CSS** - Utility-first styling approach
-- **Component-based** - Reusable UI components
-
-## 🧪 Testing
-
-### Verification Checklist
-- [ ] Frontend runs on port 5173
-- [ ] Backend runs on port 5000
-- [ ] MongoDB connects successfully
-- [ ] Sign up works with Clerk
-- [ ] Sign in works with Clerk
-- [ ] Sign out works properly
-- [ ] UserButton displays correctly
-- [ ] Profile page loads Clerk components
-- [ ] Protected routes redirect unauthenticated users
-- [ ] `/api/health` returns 200 OK
-- [ ] `/api/auth/me` rejects unauthenticated requests
-- [ ] `/api/auth/me` accepts authenticated requests
-- [ ] Clerk tokens reach backend correctly
-- [ ] No secrets exposed in code
-- [ ] 404 page works correctly
-- [ ] UI is responsive across devices
-
-### Running Tests
-```bash
-# Backend tests (when implemented)
-cd server
-npm test
-
-# Frontend tests (when implemented)
-cd client
-npm test
-```
-
-## 🔧 Development
-
-### Code Style
-- **ESLint** - Code linting and formatting
-- **ES Modules** - Using `import/export` syntax
-- **Functional components** - React hooks pattern
-- **Error boundaries** - Graceful error handling
-
-### Git Workflow
-```bash
-# Create feature branch
-git checkout -b feat/feature-name
-
-# Make changes and commit
-git add .
-git commit -m "feat: add feature description"
-
-# Push to remote
-git push -u origin feat/feature-name
-
-# Create pull request
-```
-
-### Environment Variables Security
-- Never commit `.env` files
-- Use `.env.example` as template
-- Add `.env*` to `.gitignore`
-- Use different keys for development/production
-
-## 📚 Documentation
-
-- **`docs/08-ai-development.md`** - Kiro-assisted development log
-- **`docs/`** - Additional project documentation
-- **API Documentation** - Available via inline code comments
-
-## 🚨 Troubleshooting
-
-### Common Issues
-
-1. **MongoDB Connection Failed**
-   - Check `MONGO_URI` in server/.env
-   - Verify MongoDB service is running
-   - Test connection with MongoDB Compass
-
-2. **Clerk Authentication Errors**
-   - Verify Clerk keys are correct
-   - Check redirect URLs in Clerk dashboard
-   - Ensure CORS allows localhost:5173
-
-3. **CORS Issues**
-   - Backend CORS middleware should allow `http://localhost:5173`
-   - Check browser console for CORS errors
-
-4. **Environment Variables Not Loading**
-   - Restart dev servers after changing .env files
-   - Check variable names match exactly
-   - Verify .env files are in correct directories
-
-### Debug Mode
-```bash
-# Frontend with debug logging
-cd client
-npm run dev -- --debug
-
-# Backend with debug logging
-cd server
-DEBUG=* npm run dev
-```
-
-## 📄 License
-
-This project is proprietary software. All rights reserved.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+SpeedHype is a next-generation automotive community and vehicle intelligence web application built for petrolheads, automotive enthusiasts, and everyday car buyers. Combining the excitement of community social feeds, real-time pit chats, and verified Indian vehicle catalogs with an AI-assisted multi-source ingestion pipeline and interactive side-by-side vehicle comparison duels, SpeedHype delivers a high-octane digital garage experience.
 
 ---
 
-**SpeedHype** - Your Automotive World. One Platform. 🏎️✨
+## 🌟 Key Features
 
-## Car catalog and AI ingestion pipeline
+### 1. 🏎️ Curated Automotive Catalog & Spec Sheets
+- **India-Market Vehicle Database**: Browse and filter curated cars by brand, body style, fuel type, transmission, seating capacity, and price brackets in Indian Rupees (INR).
+- **Comprehensive Technical Specs**: Detailed specs covering engine displacement, horsepower, peak torque, fuel economy, transmission options, dimensions, ground clearance, and safety ratings.
+- **Evidence & Source Attribution**: Transparent tracking of specification sources with supporting quotes and official links.
 
-The public Cars page (`/cars`) only shows **admin-approved** records from MongoDB. New data is collected by a separate Python service (LangGraph) using **Tavily** search and a **local Ollama model** for extraction (no paid LLM API), saved as `pending`, and published only after an administrator reviews it at `/admin/cars`. Full design: [docs/DATA_INGESTION_ARCHITECTURE.md](docs/DATA_INGESTION_ARCHITECTURE.md).
+### 2. ⚔️ Head-to-Head Vehicle Comparison Duel
+- **Interactive Dual Selector**: Compare any two vehicles side-by-side across dimensions, powertrains, performance metrics, and pricing.
+- **Highlight Differences**: Quick toggle to spotlight diverging metrics and contrast key advantages.
+- **Responsive Comparison Matrix**: Built with clean tabular layouts adapted for both compact mobile viewports and wide displays.
 
-> The pipeline reports *evidence checks*, not truth. Every value must have a quote that exists in the retrieved source text; important specs are cross-checked across domains; conflicts and gaps are flagged. LLM output is never labelled "verified" - an admin approves each record.
+### 3. 💬 Real-Time Pit Chat & Communities
+- **Interest-Driven Clubs**: Create and join automotive clubs tailored to brands, motorsports, tuning, and regional meetups.
+- **Socket.IO Live Chat**: Low-latency authenticated chat rooms with member lists and real-time status indicators.
+- **Rich Media Sharing**: Support for image and video attachments up to 12 MB powered by Cloudinary and binary media handling.
 
-### Setup (free tiers)
+### 4. 📰 Paddock Feed & Story Publishing
+- **Dynamic Activity Feed**: Real-time stream of community posts, trending automotive discussions, vehicle launch alerts, and member stories.
+- **Engagement System**: Upvoting, bookmarking, and discussion threads on all shared content.
+- **Automotive Blogs**: Long-form editorial posts and reviews from verified community drivers.
 
-1. Install [Ollama](https://ollama.com) and pull a model (`ollama pull <model>`; check with `curl http://localhost:11434/api/tags`). Create a free [Tavily](https://app.tavily.com) key (≈1,000 credits/month) for web search.
-2. Install and configure the Python service:
+### 5. 🛡️ Admin Vehicle Ingestion & Review Console
+- **Manual Car Entry**: Dedicated admin interface to add new vehicles with granular field inputs, spec validations, and Cloudinary or direct image URL uploads.
+- **AI Ingestion Review Pipeline**: Inspect auto-ingested vehicle records, review citation snippets, edit candidate specifications, and approve or reject submissions before publishing to the public catalog.
+- **Role-Based Access Control**: Strict server-side verification using Clerk authentication ensuring administrative routes and catalog mutation endpoints remain secured.
 
-   ```powershell
-   cd ai-services
-   py -3 -m venv .venv
-   .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-   Copy-Item .env.example .env   # then fill TAVILY_API_KEY, MONGO_URI, CAR_INGESTION_SHARED_SECRET and set OLLAMA_MODEL (blank = auto-pick)
-   ```
+### 6. 👤 User Garages & Profile
+- **Personalized Dashboards**: Track followed communities, published blogs, saved vehicles, and activity logs.
+- **Custom Automotive Styling**: High-contrast dark automotive aesthetic designed with carbon and race-red accents.
 
-   `MONGO_URI` must point at the same Atlas database as `server/.env`. The Tavily key and Mongo URI live only in `ai-services/.env` (git-ignored). Ollama needs no key; the dashboard shows whether Ollama is reachable and which model is in use. Pending records can be edited (**Edit specs**), re-extracted (**Retry extraction**), approved or rejected.
-3. In `server/.env` set `CAR_INGESTION_SHARED_SECRET` (same value), `CAR_CATALOG_ADMIN_USER_IDS` (comma-separated Clerk user IDs allowed to run/review) and optionally `CAR_INGESTION_AGENT_AUTOSTART=true` + `PYTHON_EXECUTABLE`. Or start the service manually: `cd ai-services; .\.venv\Scripts\python.exe -m uvicorn agent.main:app --host 127.0.0.1 --port 8010`.
-4. Sign in as an admin, open **Cars → Open admin console** (`/admin/cars`), choose a count (start with 5) and press *Start ingestion*. Watch status/logs/errors, then approve or reject each pending record (warnings require a written justification; image links are removed unless you confirm permission).
-5. Existing deployments: run `node server/scripts/backfill-review-status.js --apply` once if you have car records created before the review workflow (they have no `reviewStatus` and would otherwise be hidden).
+---
 
-### Safeguards
+## 🛠️ Technologies Used
 
-- Admin-only: Clerk session verified in Express, admin allow-list enforced server-side; the acting user id is taken from the session, never from the request body. Express → Python uses a loopback-only, shared-secret API.
-- Free-tier protection: per-run cap (`MAX_CARS_PER_RUN`), daily/monthly counters persisted in MongoDB, request timeouts, retries with backoff, and a clean `quota_exhausted` stop that keeps partial results.
-- Sources: Tavily is restricted to official manufacturer domains plus a small secondary allow-list; results from any other domain are discarded. The service does not crawl sites itself. Images are stored as links with attribution only (never downloaded), flagged `unverified`.
-- Idempotent: unique `identityKey` (brand|model|variant|year); re-runs skip existing cars and never overwrite approved/rejected records.
-- Tests (offline, synthetic pages + throw-away Mongo DB): `cd ai-services; .\.venv\Scripts\python.exe -m unittest tests.test_ingestion`.
+### Frontend
+- **React 19** (`19.2.8`) - Modern UI component architecture with hooks and concurrent features
+- **Vite** (`8.3.0`) - Ultra-fast development server and optimized build tooling
+- **Tailwind CSS v4** (`4.3.3`) - Utility-first styling with modern CSS engine
+- **React Router DOM v7** (`7.18.4`) - Declarative client-side routing
+- **@clerk/react** (`6.17.7`) - Complete frontend authentication, session management, and user controls
+- **Socket.IO Client** (`4.8.4`) - Real-time bidirectional WebSocket client for community chat
+- **Axios** (`1.20.0`) - Promise-based HTTP client with authenticated request interceptors
+- **Lucide React** - High-quality iconography for automotive and dashboard interfaces
 
-## Legacy configured-source agent
+### Backend
+- **Node.js** - High-performance asynchronous JavaScript runtime (v18+)
+- **Express 5** (`5.2.1`) - Scalable REST API framework
+- **MongoDB & Mongoose** (`9.11.1`) - Schema validation, indexing, and object modeling
+- **@clerk/express** (`2.1.77`) - Secure session token verification and middleware
+- **Socket.IO** (`4.8.4`) - Authenticated real-time WebSocket communication server
+- **Cloudinary** (`2.11.0`) - Cloud-based media storage and asset transformation
+- **Multer** (`2.4.0`) - Multipart form data handling for media uploads
 
-The earlier worker (`/trigger`, OpenAI-based, explicit reviewed source URLs) remains in `ai-services/agent/main.py` and is unchanged; the admin console uses the new pipeline instead. Records pushed through its `/car-catalog/ingestion/records` endpoint are now also created as `pending`.
+### AI & Ingestion Service
+- **Python 3.11+** & **FastAPI** (`0.115+`) - Microservice architecture for ingestion workflows
+- **LangGraph** (`0.2+`) - Agentic state graphs orchestrating multi-step source fetching, extraction, and validation
+- **Ollama** - Local LLM integration (no paid LLM API required) for zero-cost structured extraction
+- **Tavily Search API** - Evidence gathering restricted to official manufacturer and automotive domains
+- **BeautifulSoup4** - Source document parsing and robots policy compliance enforcement
 
-The catalog (`/cars`) is stored separately from the community launch posts used by the existing activity feed. Catalog records include brand/model/variant, launch year, India body style, price in INR when published, specifications, permitted image URLs, and source/license attribution. Unknown source fields stay empty; the ingestion agent does not fill missing facts from model knowledge. Variant records are deduplicated by brand, model, variant, and model year.
+---
 
-### Legacy source policy and prerequisites
+## 📁 Repository Structure
 
-The worker does **not** discover or scrape arbitrary websites by default. Publicly accessible pages are not automatically licensed for automated collection. Configure only manufacturer pages or APIs that you have reviewed and that permit this access and reuse. The worker checks each exact hostname against an explicit allowlist and checks `robots.txt` before fetching every page. A source with a disallow rule, unavailable robots policy, unreviewed terms, failed citation validation, or an off-allowlist redirect is skipped. Image reuse is off by default and must be separately permitted for each source.
+```text
+SpeedHype/
+├── client/                     # Frontend Single Page Application (React 19 + Vite)
+│   ├── public/                 # Static assets & browser favicon
+│   ├── src/
+│   │   ├── assets/             # Logos and automotive imagery
+│   │   ├── components/         # Reusable UI components (Navbar, Modals, Feed, Compare)
+│   │   ├── layouts/            # Main layout and view wrappers
+│   │   ├── pages/              # Application views (Home, Feed, Cars, Admin, Compare, etc.)
+│   │   ├── services/           # Axios API services and Clerk auth helpers
+│   │   ├── App.jsx             # Route definitions & Clerk provider wrappers
+│   │   └── index.css           # Global Tailwind CSS v4 styling rules
+│   └── package.json
+├── server/                     # Backend API & WebSocket Server (Node.js + Express 5)
+│   ├── src/
+│   │   ├── config/             # Database connection & Cloudinary setup
+│   │   ├── controllers/        # Route controllers (cars, auth, communities, feed, etc.)
+│   │   ├── middleware/         # Clerk auth guards and validation middlewares
+│   │   ├── models/             # Mongoose schemas (CarCatalog, Community, User, Post, etc.)
+│   │   ├── routes/             # REST API endpoint definitions
+│   │   ├── sockets/            # Socket.IO room & message event handlers
+│   │   └── server.js           # Server bootstrap and listener
+│   └── package.json
+├── ai-services/                # Background Ingestion & Verification Agent (Python)
+│   ├── agent/                  # LangGraph workflow, Tavily search & Ollama extraction
+│   ├── tests/                  # Ingestion unit tests and mock validations
+│   └── requirements.txt
+├── docs/                       # Project architecture documentation
+└── README.md                   # Project documentation
+```
 
-The LangGraph flow fetches each explicitly configured, reviewed source page, extracts a candidate with an evidence quote per field, and reconciles candidates only when brand, model, model year, and stated variant match. It may fill a missing field from another configured page for that same exact vehicle; conflicting values are omitted. Each stored field retains its source title, URL, and supporting quote, visible under “Specification evidence” on the details page. Unsupported optional values are omitted, while records without evidence for brand/model/model year/category are rejected. The worker never guesses missing prices or variant names. Price is stored only when an approved source explicitly states an INR amount; absent or non-INR prices stay empty. Category must be explicitly supported and unambiguous, using one of `sedan`, `suv`, `hatchback`, `truck`, `coupe`, `convertible`, `electric`, or `hybrid`.
+---
 
-### Configure and run
+## ⚙️ Setup & Installation Instructions
 
-1. Set `server/.env` from `server/.env.example`. Keep `CAR_INGESTION_SHARED_SECRET` private and set `CAR_SOURCE_ALLOWED_DOMAINS` to the same host allowlist you use for the agent. Set `CAR_CATALOG_ADMIN_USER_IDS` to comma-separated Clerk user IDs. Set `CAR_INGESTION_AGENT_AUTOSTART=true` and `PYTHON_EXECUTABLE` to the interpreter that has the worker requirements installed. Never put these values in the client environment.
-2. Install Python 3.11+ and create the worker environment:
+### Prerequisites
+Before setting up the project, ensure you have the following installed on your machine:
+- **Node.js** (v18.0.0 or higher) & **npm** (v9.0.0 or higher)
+- **Python** (v3.11 or higher) *(required only for AI ingestion worker)*
+- **MongoDB** (Local instance or free MongoDB Atlas URI)
+- **Clerk Account** ([clerk.com](https://clerk.com)) - for authentication keys
+- **Cloudinary Account** *(optional, for image/media uploads)*
 
-   ```powershell
-   cd ai-services
-   py -3 -m venv .venv
-   .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-   Copy-Item .env.example .env
-   ```
+---
 
-   On macOS/Linux, use `python3 -m venv .venv`, `.venv/bin/python -m pip install -r requirements.txt`, and copy `.env.example` to `.env`.
-3. In `ai-services/.env`, use the same internal shared secret as the server; set `EXPRESS_API_URL` to the Express API URL, configure a server-side `OPENAI_API_KEY`, and choose a model with structured-output support. Set `SOURCE_POLICY_APPROVED=true` only after reviewing every configured source’s terms and robots policy. Provide `CAR_SOURCE_ALLOWED_DOMAINS` and `CAR_SOURCE_URLS` as a JSON array. Every source entry requires an HTTPS `url`, `source_name`, `license`, and a reviewed `terms_reviewed: true`. A direct product page uses `page_type: "detail"` (the default). A reviewed manufacturer listing page can use `page_type: "listing"`, a restrictive `product_link_pattern` matching product URL paths, and optional `max_pages` (capped at 50); the worker follows only same-host links matching that pattern and checks robots rules on every page. To enable cross-source lookup for missing fields, add a reviewed same-host `search_url_template` containing exactly one `{query}` placeholder and a product-link pattern; the agent queries it with the exact extracted brand/model/year/variant, then fetches at most five same-host matching pages per model. Every result page still has to pass robots and evidence checks. The worker determines the category from explicit source evidence. Set `image_reuse_permitted: true` only when the source explicitly permits reuse of its images.
+### Step 1: Clone the Repository
 
-   Example shape (replace the placeholder with a real, reviewed source; it is not a working data provider):
+```bash
+git clone https://github.com/Chiragchaudhari2005/SpeedHype.git
+cd SpeedHype
+```
 
-   ```env
-   CAR_SOURCE_ALLOWED_DOMAINS=api.manufacturer.example
-   SOURCE_POLICY_APPROVED=true
-   CAR_SOURCE_URLS=[{"url":"https://api.manufacturer.example/vehicles/model","source_name":"Manufacturer API","license":"Reviewed permitted terms","license_url":"https://api.manufacturer.example/terms","terms_reviewed":true,"image_reuse_permitted":false,"search_url_template":"https://api.manufacturer.example/search?q={query}","product_link_pattern":"/vehicles/[a-z0-9-]+"}]
-   ```
+---
 
-4. Set `PYTHON_EXECUTABLE` in `server/.env` to the Python interpreter containing the worker dependencies and set `CAR_INGESTION_AGENT_AUTOSTART=true`. Starting the Express server launches the separate worker process; it runs once on startup and then every `CAR_INGESTION_INTERVAL_HOURS` (24 by default) while the worker remains running. Alternatively, start it separately from `ai-services` with `.\.venv\Scripts\python.exe -m uvicorn agent.main:app --host 127.0.0.1 --port 8010`.
-5. A configured Clerk administrator can start a run from the Cars catalog page. The browser calls the authenticated Express admin route; Express then calls the worker with the server-only shared secret. The ingestion-records endpoint accepts requests only with that internal secret and approved source domains.
+### Step 2: Configure Environment Variables
 
-The admin control is disabled until both Express and the agent are configured. The worker exposes its control API only on loopback by default. Do not expose that port publicly or share either server secret.
+#### 1. Frontend Configuration (`client/.env.local` or `client/.env`)
+Create a `.env.local` file inside the `client` directory:
+
+```env
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_your_clerk_publishable_key
+VITE_API_URL=http://localhost:5000/api
+```
+
+#### 2. Backend Configuration (`server/.env`)
+Create a `.env` file inside the `server` directory:
+
+```env
+PORT=5000
+MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/speedhype?retryWrites=true&w=majority
+CLERK_PUBLISHABLE_KEY=pk_test_your_clerk_publishable_key
+CLERK_SECRET_KEY=sk_test_your_clerk_secret_key
+CLIENT_ORIGIN=http://localhost:5173
+
+# Optional: Cloudinary configuration for image uploads
+CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+
+# Admin Authorization (Comma-separated Clerk User IDs)
+CAR_CATALOG_ADMIN_USER_IDS=user_xxxxxxxxxxxxxxxxx
+
+# AI Ingestion Service Shared Secret
+CAR_INGESTION_SHARED_SECRET=your_shared_secret_passphrase
+CAR_INGESTION_AGENT_AUTOSTART=false
+```
+
+#### 3. AI Services Configuration (`ai-services/.env`) *(Optional)*
+Create a `.env` file inside the `ai-services` directory:
+
+```env
+MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/speedhype?retryWrites=true&w=majority
+TAVILY_API_KEY=tvly-your_tavily_key
+CAR_INGESTION_SHARED_SECRET=your_shared_secret_passphrase
+EXPRESS_API_URL=http://localhost:5000/api
+OLLAMA_MODEL=mistral
+SOURCE_POLICY_APPROVED=true
+```
+
+---
+
+### Step 3: Install Dependencies
+
+```bash
+# Install Server Dependencies
+cd server
+npm install
+
+# Install Client Dependencies
+cd ../client
+npm install
+
+# Optional: Install Python AI Dependencies
+cd ../ai-services
+python -m venv .venv
+# Windows:
+.\.venv\Scripts\pip install -r requirements.txt
+# Linux/macOS:
+source .venv/bin/activate && pip install -r requirements.txt
+```
+
+---
+
+## 🚀 How to Run the Application
+
+You can run the frontend and backend in separate terminal tabs:
+
+### Terminal 1: Run Backend Server
+```bash
+cd server
+npm run dev
+```
+- **Server running at:** `http://localhost:5000`
+- **Health check endpoint:** `http://localhost:5000/api/health`
+
+### Terminal 2: Run Frontend Client
+```bash
+cd client
+npm run dev
+```
+- **Client running at:** `http://localhost:5173`
+
+### Terminal 3: Run AI Ingestion Worker *(Optional)*
+```bash
+cd ai-services
+# Windows:
+.\.venv\Scripts\python -m uvicorn agent.main:app --host 127.0.0.1 --port 8010
+# Linux/macOS:
+source .venv/bin/activate && python -m uvicorn agent.main:app --host 127.0.0.1 --port 8010
+```
+
+---
+
+## 🤖 AI Development Experience
+
+### AI Tool Selection
+For the architecture, development, and refinement of SpeedHype, **Kiro** was used as the primary AI pair programmer and agentic development tool.
+
+### Overview of AI Development Experience
+Developing SpeedHype with **Kiro** significantly accelerated full-stack iteration speed while maintaining high code quality and architecture coherence:
+- **Context-Aware Scaffolding**: Kiro seamlessly mapped relationships across the MERN stack, ensuring that changes to Mongoose database schemas were mirrored in Express controller validations, Clerk authorization policies, and React frontend components.
+- **Automotive Design System Consistency**: Rather than generating disjointed or generic styles, Kiro adhered to an intentional dark automotive aesthetic using carbon backgrounds, subtle amber/red speed accents, and precise responsive layouts.
+- **Strict Evidence-Grounded Logic**: During the creation of the car catalog and comparison tools, Kiro ensured that missing specifications remained clean `null` values rather than hallucinating artificial values, strictly respecting real-world technical accuracy.
+
+---
+
+## 📌 Specific Tasks Accomplished Using the AI Tool (Kiro)
+
+Here are **5 specific tasks** where Kiro was directly utilized during development:
+
+### 1. 🧩 Component Development: Interactive Vehicle Comparison Duel & Header Navigation
+- **What was built**: Developed the side-by-side car comparison duel interface (`client/src/pages/CompareCars.jsx`) allowing users to choose two vehicles, inspect matched/diverging powertrain and chassis dimensions, and highlight differences.
+- **Kiro's Contribution**: Implemented sticky column headers, null-safe specification tables, difference calculation logic, and a fully responsive automotive navigation bar with dynamic Clerk authentication states and animated mobile drawer menus.
+
+### 2. ⚡ API Creation & Server Validation: Manual Car Entry & Admin Catalog Controller
+- **What was built**: Created the admin REST API endpoints for manual vehicle entries (`POST /api/cars/catalog/manual`) and car updates (`PUT /api/cars/catalog/:id`).
+- **Kiro's Contribution**: Wrote Express 5 controllers with granular field validations (handling numeric conversions for horsepower, displacement, torque, mileage, and dimensions), integrated Cloudinary image upload workflows, and secured endpoints using Clerk admin allowlist middleware.
+
+### 3. 🗄️ Database Integration: Mongoose CarCatalog & Community Chat Schemas
+- **What was built**: Designed the multi-tier MongoDB data layer modeling India-market cars (`CarCatalog`), live community messages (`ChatMessage`), and activity feeds.
+- **Kiro's Contribution**: Built compound indexes on `{ brand: 1, model: 1, variant: 1, modelYear: 1 }` to prevent duplicate vehicles, established audit logs for `reviewStatus` (pending, approved, rejected), and structured evidence attribution fields for source traceability.
+
+### 4. 🐞 Debugging & React Compiler Optimization: Clerk Token Handshake & Lint Resolution
+- **What was built**: Diagnostic and resolution phase across client-side API interceptors and build pipelines.
+- **Kiro's Contribution**: Pinpointed subtle synchronization race conditions in Clerk's `getToken()` template authorization flow, fixed unhandled asynchronous states in Socket.IO community joins, and refactored components to pass strict ESLint rules and Vite React compiler checks with zero errors.
+
+### 5. 🎨 UI/UX Refactoring & Comprehensive Responsive Overhaul
+- **What was built**: Complete responsive overhaul of the entire application across mobile (320px+), tablet, and desktop viewports without horizontal scroll leaks.
+- **Kiro's Contribution**: Systematically audited and polished all pages—including Feed, Communities, Blogs, Car Catalog, and Admin Review Dashboard—replacing generic UI patterns with tailored automotive cards, accessible typography, high-contrast badges, and smooth micro-interactions.
+
+---
+
+## 📄 License
+
+This project is licensed under the ISC License.
+
+---
+
+**SpeedHype** - Built for the Drive. Engineered for Enthusiasts. 🏎️💨
