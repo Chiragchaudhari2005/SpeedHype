@@ -1,6 +1,5 @@
-#  SpeedHype - Automotive Community & Vehicle Intelligence Platform
+#  SpeedHype - All-in-one Automotive Community Platform
 
-[![SpeedHype Platform](https://img.shields.io/badge/SpeedHype-Automotive%20Platform-dc2626?style=for-the-badge&logo=speedtest&logoColor=white)](https://github.com/Chiragchaudhari2005/SpeedHype)
 [![React](https://img.shields.io/badge/React-19.2.8-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![Express](https://img.shields.io/badge/Express-5.2.1-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-9.11-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
@@ -12,40 +11,32 @@ SpeedHype is a next-generation automotive community and vehicle intelligence web
 
 ---
 
-## 🌟 Key Features
+##  Architecture Diagram
 
-### 1. 🏎️ Curated Automotive Catalog & Spec Sheets
+![alt text](image.png)
+
+##  Key Features
+
+### 1. Curated Automotive Catalog & Spec Sheets
 - **India-Market Vehicle Database**: Browse and filter curated cars by brand, body style, fuel type, transmission, seating capacity, and price brackets in Indian Rupees (INR).
 - **Comprehensive Technical Specs**: Detailed specs covering engine displacement, horsepower, peak torque, fuel economy, transmission options, dimensions, ground clearance, and safety ratings.
 - **Evidence & Source Attribution**: Transparent tracking of specification sources with supporting quotes and official links.
 
-### 2. ⚔️ Head-to-Head Vehicle Comparison Duel
+### 2. Vehicle Comparison
 - **Interactive Dual Selector**: Compare any two vehicles side-by-side across dimensions, powertrains, performance metrics, and pricing.
 - **Highlight Differences**: Quick toggle to spotlight diverging metrics and contrast key advantages.
 - **Responsive Comparison Matrix**: Built with clean tabular layouts adapted for both compact mobile viewports and wide displays.
 
-### 3. 💬 Real-Time Pit Chat & Communities
+### 3. Real-Time Community Chat
 - **Interest-Driven Clubs**: Create and join automotive clubs tailored to brands, motorsports, tuning, and regional meetups.
 - **Socket.IO Live Chat**: Low-latency authenticated chat rooms with member lists and real-time status indicators.
 - **Rich Media Sharing**: Support for image and video attachments up to 12 MB powered by Cloudinary and binary media handling.
 
-### 4. 📰 Paddock Feed & Story Publishing
-- **Dynamic Activity Feed**: Real-time stream of community posts, trending automotive discussions, vehicle launch alerts, and member stories.
-- **Engagement System**: Upvoting, bookmarking, and discussion threads on all shared content.
-- **Automotive Blogs**: Long-form editorial posts and reviews from verified community drivers.
 
-### 5. 🛡️ Admin Vehicle Ingestion & Review Console
-- **Manual Car Entry**: Dedicated admin interface to add new vehicles with granular field inputs, spec validations, and Cloudinary or direct image URL uploads.
-- **AI Ingestion Review Pipeline**: Inspect auto-ingested vehicle records, review citation snippets, edit candidate specifications, and approve or reject submissions before publishing to the public catalog.
-- **Role-Based Access Control**: Strict server-side verification using Clerk authentication ensuring administrative routes and catalog mutation endpoints remain secured.
-
-### 6. 👤 User Garages & Profile
-- **Personalized Dashboards**: Track followed communities, published blogs, saved vehicles, and activity logs.
-- **Custom Automotive Styling**: High-contrast dark automotive aesthetic designed with carbon and race-red accents.
 
 ---
 
-## 🛠️ Technologies Used
+## Technologies Used
 
 ### Frontend
 - **React 19** (`19.2.8`) - Modern UI component architecture with hooks and concurrent features
@@ -200,7 +191,7 @@ source .venv/bin/activate && pip install -r requirements.txt
 
 ---
 
-## 🚀 How to Run the Application
+## How to Run the Application
 
 You can run the frontend and backend in separate terminal tabs:
 
@@ -230,7 +221,7 @@ source .venv/bin/activate && python -m uvicorn agent.main:app --host 127.0.0.1 -
 
 ---
 
-## 🤖 AI Development Experience
+##  AI Development Experience
 
 ### AI Tool Selection
 For the architecture, development, and refinement of SpeedHype, **Kiro** was used as the primary AI pair programmer and agentic development tool.
@@ -243,36 +234,26 @@ Developing SpeedHype with **Kiro** significantly accelerated full-stack iteratio
 
 ---
 
-## 📌 Specific Tasks Accomplished Using the AI Tool (Kiro)
+##  Specific Tasks Accomplished Using the AI Tool (Kiro)
 
-Here are **5 specific tasks** where Kiro was directly utilized during development:
+Here are **4 specific tasks** where Kiro was directly utilized during development:
 
-### 1. 🧩 Component Development: Interactive Vehicle Comparison Duel & Header Navigation
+### 1. Component Development: Interactive Vehicle Comparison Duel & Header Navigation
 - **What was built**: Developed the side-by-side car comparison duel interface (`client/src/pages/CompareCars.jsx`) allowing users to choose two vehicles, inspect matched/diverging powertrain and chassis dimensions, and highlight differences.
 - **Kiro's Contribution**: Implemented sticky column headers, null-safe specification tables, difference calculation logic, and a fully responsive automotive navigation bar with dynamic Clerk authentication states and animated mobile drawer menus.
 
-### 2. ⚡ API Creation & Server Validation: Manual Car Entry & Admin Catalog Controller
+### 2. API Creation & Server Validation: Manual Car Entry & Admin Catalog Controller
 - **What was built**: Created the admin REST API endpoints for manual vehicle entries (`POST /api/cars/catalog/manual`) and car updates (`PUT /api/cars/catalog/:id`).
 - **Kiro's Contribution**: Wrote Express 5 controllers with granular field validations (handling numeric conversions for horsepower, displacement, torque, mileage, and dimensions), integrated Cloudinary image upload workflows, and secured endpoints using Clerk admin allowlist middleware.
 
-### 3. 🗄️ Database Integration: Mongoose CarCatalog & Community Chat Schemas
-- **What was built**: Designed the multi-tier MongoDB data layer modeling India-market cars (`CarCatalog`), live community messages (`ChatMessage`), and activity feeds.
-- **Kiro's Contribution**: Built compound indexes on `{ brand: 1, model: 1, variant: 1, modelYear: 1 }` to prevent duplicate vehicles, established audit logs for `reviewStatus` (pending, approved, rejected), and structured evidence attribution fields for source traceability.
 
-### 4. 🐞 Debugging & React Compiler Optimization: Clerk Token Handshake & Lint Resolution
-- **What was built**: Diagnostic and resolution phase across client-side API interceptors and build pipelines.
+
+### 3.Debugging 
+- **What was built**: Diagnostic and resolution phase across client-side API interceptors and build pipelines and CLerk Authentication.
 - **Kiro's Contribution**: Pinpointed subtle synchronization race conditions in Clerk's `getToken()` template authorization flow, fixed unhandled asynchronous states in Socket.IO community joins, and refactored components to pass strict ESLint rules and Vite React compiler checks with zero errors.
 
-### 5. 🎨 UI/UX Refactoring & Comprehensive Responsive Overhaul
+### 4. UI/UX Refactoring & Comprehensive Responsive Overhaul
 - **What was built**: Complete responsive overhaul of the entire application across mobile (320px+), tablet, and desktop viewports without horizontal scroll leaks.
 - **Kiro's Contribution**: Systematically audited and polished all pages—including Feed, Communities, Blogs, Car Catalog, and Admin Review Dashboard—replacing generic UI patterns with tailored automotive cards, accessible typography, high-contrast badges, and smooth micro-interactions.
 
----
-
-## 📄 License
-
-This project is licensed under the ISC License.
-
----
-
-**SpeedHype** - Built for the Drive. Engineered for Enthusiasts. 🏎️💨
+**SpeedHype** - Built for the Drive. Engineered for Enthusiasts. 
