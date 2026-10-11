@@ -7,7 +7,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4.3-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![LangGraph](https://img.shields.io/badge/LangGraph-Python_AI-FF6F00?style=for-the-badge&logo=python&logoColor=white)](https://langchain-ai.github.io/langgraph/)
 
-SpeedHype is a next-generation automotive community and vehicle intelligence web application built for petrolheads, automotive enthusiasts, and everyday car buyers. Combining the excitement of community social feeds, real-time pit chats, and verified Indian vehicle catalogs with an AI-assisted multi-source ingestion pipeline and interactive side-by-side vehicle comparison duels, SpeedHype delivers a high-octane digital garage experience.
+SpeedHype is a  automotive community and vehicle information web application built for petrolheads, automotive enthusiasts, and everyday car buyers. Combining the excitement of community social feeds, real-time chats, and verified Indian vehicle catalogs with an  side-by-side vehicle comparison.
 
 ---
 
