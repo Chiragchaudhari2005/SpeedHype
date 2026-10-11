@@ -84,7 +84,7 @@ const CarsPage = () => {
             <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
             Verified Vehicle Specifications
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white">Car Database</h1>
+          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white">Cars</h1>
           <p className="mt-2 max-w-2xl text-sm sm:text-base text-zinc-400 leading-relaxed">
             Explore sourced specifications, official ex-showroom prices, dimensions, and powertrain telemetry with zero invented values.
           </p>

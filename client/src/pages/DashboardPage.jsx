@@ -210,7 +210,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {[
             { name: 'Feed', desc: 'Live enthusiast feed', color: 'from-red-600 to-rose-600', path: '/feed', icon: '⚡' },
-            { name: 'Car Database', desc: 'Sourced specifications', color: 'from-amber-600 to-orange-600', path: '/cars', icon: '🏎️' },
+            { name: 'Cars', desc: 'Sourced specifications', color: 'from-amber-600 to-orange-600', path: '/cars', icon: '🏎️' },
             { name: 'Comparison', desc: 'Side-by-side duel', color: 'from-emerald-600 to-teal-600', path: '/compare', icon: '⚖️' },
             { name: 'Communities', desc: 'Niche enthusiast clubs', color: 'from-blue-600 to-cyan-600', path: '/communities', icon: '👥' },
             { name: 'Blogs & Stories', desc: 'Guides and reviews', color: 'from-purple-600 to-indigo-600', path: '/blogs', icon: '📰' },
